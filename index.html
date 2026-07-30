@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- 全螢幕 Web App (PWA) 最佳化設定 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#d97706">
+    
     <title>曼谷之旅 Bangkok Trip - 九皇齋節特別版</title>
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
@@ -68,7 +74,8 @@
                    playsinline 
                    @ended="closeIntroVideo"
                    class="w-full h-full object-cover">
-                <!-- 替換為你的泰國/曼谷主題影片 URL (例如 MP4) -->
+                <!-- 優先讀取上傳至 GitHub 的 intro.mp4 -->
+                <source src="intro.mp4" type="video/mp4">
                 <source src="https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-thai-dish-being-cooked-41261-large.mp4" type="video/mp4">
                 您的瀏覽器不支援影片播放。
             </video>
@@ -1117,6 +1124,45 @@
                 { week: 'FRI', date: '17' }, { week: 'SAT', date: '18' }
             ];
 
+            // 預設 10 天曼谷精選行程 (10/09 ~ 10/18)
+            const defaultItinerary = Array(10).fill().map(() => []); 
+            defaultItinerary[0] = [
+                { id: 1, category: '航班', name: '台北 TPE 飛往 曼谷 BKK (星宇 JX745)', time: '13:55', notes: '班機 13:55 起飛，預計 16:50 抵達 Suvarnabhumi 國際機場', transportType: 'flight', isVeggie: false },
+                { id: 2, category: '美食', name: '喬德夜市 Jodd Fairs', time: '19:30', notes: '品嚐熱門曼谷夜市美食與九皇齋節 (เจ) 素食小吃攤', transportType: 'car', isVeggie: true }
+            ];
+            defaultItinerary[1] = [
+                { id: 3, category: '景點', name: '曼谷大皇宮 & 鄭王廟 (Wat Arun)', time: '09:00', notes: '換上泰服拍攝，體驗搭乘昭披耶河接駁船', transportType: 'train', isVeggie: false },
+                { id: 4, category: '美食', name: 'May Veggie Home 蔬食餐廳', time: '12:30', notes: '道地泰式蔬食綠咖哩與泰式炒河粉', transportType: 'car', isVeggie: true }
+            ];
+            defaultItinerary[2] = [
+                { id: 5, category: '購物', name: 'ICONSIAM 暹羅天地', time: '11:00', notes: '逛室內水上市場區，品嚐素食泰式甜點與芒果糯米飯', transportType: 'car', isVeggie: true },
+                { id: 6, category: '按摩', name: 'Let\'s Relax SPA 按摩', time: '16:00', notes: '放鬆泰式古法按摩 2 小時', transportType: 'walk', isVeggie: false }
+            ];
+            defaultItinerary[3] = [
+                { id: 7, category: '購物', name: '恰圖恰週末市集 Chatuchak Market', time: '10:00', notes: '曼谷最大市集爆買服飾與紀念品', transportType: 'train', isVeggie: false }
+            ];
+            defaultItinerary[4] = [
+                { id: 8, category: '景點', name: '大城古蹟一日遊 Ayutthaya', time: '08:30', notes: '包車參觀瑪哈泰寺樹抱佛頭與柴瓦塔那蘭寺', transportType: 'car', isVeggie: false }
+            ];
+            defaultItinerary[5] = [
+                { id: 9, category: '購物', name: 'CentralwOrld & 邊逛邊吃', time: '11:30', notes: '拜四面佛、逛 CentralwOrld 與 Big C 採買名產', transportType: 'train', isVeggie: false }
+            ];
+            defaultItinerary[6] = [
+                { id: 10, category: '美食', name: 'Broccoli Revolution 蔬食簡餐', time: '12:00', notes: 'Sukhumvit 巷弄內的時尚蔬食咖啡廳', transportType: 'car', isVeggie: true }
+            ];
+            defaultItinerary[7] = [
+                { id: 11, category: '美食', name: '唐人街耀華力路 Chinatown Night Tour', time: '18:00', notes: '感受九皇齋節最熱鬧的唐人街素食燈會與攤販', transportType: 'car', isVeggie: true }
+            ];
+            defaultItinerary[8] = [
+                { id: 12, category: '按摩', name: 'Health Land SPA', time: '14:00', notes: '回台前的放鬆精油 Spa', transportType: 'car', isVeggie: false }
+            ];
+            defaultItinerary[9] = [
+                { id: 13, category: '購物', name: 'BKK 機場免稅店採買', time: '14:30', notes: '辦理退稅、免稅店購買禮盒', transportType: 'car', isVeggie: false },
+                { id: 14, category: '航班', name: '曼谷 BKK 飛回 台北 TPE (星宇 JX746)', time: '17:50', notes: '班機 17:50 起飛，預計 22:30 抵達桃園國際機場', transportType: 'flight', isVeggie: false }
+            ];
+
+            const itineraryData = reactive(defaultItinerary);
+
             const veggieCards = [
                 { label: '吃齋 / 吃全素', thai: 'กินเจ (Gin Jay)', pronunciation: 'Gin Jay', zh: '吃齋/全素 (不含肉、蛋、奶、蒜蔥五辛)' },
                 { label: '吃健康素/純素', thai: 'มังสวิรัติ (Mangsawirat)', pronunciation: 'Mang-sa-wi-rat', zh: '吃素 (不含肉類、海鮮)' },
@@ -1124,19 +1170,6 @@
                 { label: '不要魚露 / 不要蠔油', thai: 'ไม่ใส่น้ำปลา / ไม่ใส่น้ำมันหอย', pronunciation: 'Mai sai nam-pla / Mai sai nam-man-hoi', zh: '請勿使用魚露與蠔油調味' }
             ];
 
-            const defaultItinerary = Array(10).fill().map(() => []); 
-            defaultItinerary[0] = [
-                { id: 1, category: '航班', name: '台北飛往曼谷 (星宇 JX745)', time: '13:55', notes: '航班 TPE -> BKK', transportType: 'flight', isVeggie: false },
-                { id: 2, category: '美食', name: '喬德夜市 Jodd Fairs', time: '19:00', notes: '品嚐各式泰國九皇齋節素食小吃', transportType: 'car', isVeggie: true }
-            ];
-            defaultItinerary[1] = [
-                { id: 3, category: '美食', name: 'Broccoli Revolution', time: '12:00', notes: '曼谷時尚蔬食餐廳', transportType: 'car', isVeggie: true }
-            ];
-            defaultItinerary[9] = [
-                { id: 4, category: '航班', name: '曼谷飛回台北 (星宇 JX746)', time: '17:50', notes: '航班 BKK -> TPE', transportType: 'flight', isVeggie: false }
-            ];
-
-            const itineraryData = reactive(defaultItinerary);
             const currentDayItinerary = computed(() => itineraryData[selectedDateIndex.value] || []);
             const currentHeaderImage = computed(() => 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1000&q=80');
 
