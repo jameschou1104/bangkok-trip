@@ -64,23 +64,20 @@
 
 <div id="app" class="app-container">
 
-    <!-- 1. 開場短影片彈窗 (Opening Video Splash) -->
     <transition name="fade">
         <div v-if="showIntroVideo" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden">
-            <!-- 影片播放器 (預設靜音以利手機自動播放) -->
-            <video ref="introVideoRef" 
-                   autoplay 
-                   muted 
-                   playsinline 
-                   @ended="closeIntroVideo"
-                   class="w-full h-full object-cover">
-                <!-- 優先讀取上傳至 GitHub 的 intro.mp4 -->
-                <source src="intro.mp4" type="video/mp4">
-                <source src="https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-thai-dish-being-cooked-41261-large.mp4" type="video/mp4">
-                您的瀏覽器不支援影片播放。
-            </video>
+            <!-- YouTube 嵌入播放器 (採用滿版覆蓋與 JavaScript API 靜音切換) -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                <iframe id="introYoutubeIframe"
+                        class="w-[300vw] h-[300vh] min-w-[100%] min-h-[100%] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                        src="https://www.youtube.com/embed/2T0ZQ0Zacnw?autoplay=1&mute=1&controls=0&loop=1&playlist=2T0ZQ0Zacnw&playsinline=1&enablejsapi=1&rel=0"
+                        title="Bangkok Trip Intro Video"
+                        frameborder="0"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                </iframe>
+            </div>
 
-            <!-- 影片上方遮罩與文案 -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 flex flex-col justify-between p-6 pointer-events-none">
                 <div class="pt-8 text-center pointer-events-auto">
                     <span class="jay-badge text-sm px-3 py-1 rounded-full shadow-lg">เจ 泰國九皇齋節</span>
@@ -88,7 +85,6 @@
                     <p class="text-yellow-200 text-xs mt-1 drop-shadow">10/09 - 10/18 Bangkok Trip</p>
                 </div>
 
-                <!-- 跳過按鈕與音量開關 -->
                 <div class="flex items-center justify-between pointer-events-auto pb-6">
                     <button @click="toggleMute" class="bg-black/50 text-white/90 text-xs px-3 py-2 rounded-full backdrop-blur-md border border-white/20">
                         <i :class="isMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high'" class="mr-1"></i>
@@ -102,7 +98,6 @@
         </div>
     </transition>
     
-    <!-- 2. 主 App 頂部 Header -->
     <header class="relative w-full h-[390px] overflow-hidden bg-amber-600">
         <img :src="currentHeaderImage" alt="曼谷首頁" class="w-full h-full object-cover object-center transition-all duration-500">
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
@@ -161,7 +156,6 @@
         </div> 
     </header>
 
-    <!-- 3. 主要內容區域 -->
     <div class="relative -mt-6 bg-[#fafaf9] rounded-t-[32px] px-5 pt-6 z-10 min-h-[500px] max-w-[480px] mx-auto border-t border-amber-200/60">
 
         <!-- TAB 1: 每日行程 -->
@@ -471,7 +465,7 @@
             </div>
         </div>
 
-        <!-- TAB 2: 九皇齋節素食專區 -->
+        <!-- TAB 3: 九皇齋節素食專區 -->
         <div v-show="currentTab === 'veggie'" class="space-y-6 pb-20">
             <div class="bg-gradient-to-r from-yellow-400 via-amber-500 to-red-600 rounded-2xl p-5 text-red-950 shadow-xl relative overflow-hidden">
                 <div class="absolute -right-4 -bottom-4 opacity-15 font-black text-9xl text-white">เจ</div>
@@ -521,7 +515,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: 航班資訊與匯率 -->
+        <!-- TAB 4: 航班資訊與匯率 -->
         <div v-show="currentTab === 'info'" class="space-y-6 pb-20">
             <!-- 泰銖匯率換算 -->
             <div class="bg-white rounded-2xl p-5 card-shadow border border-amber-100">
@@ -610,7 +604,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: 購物清單 -->
+        <!-- TAB 5: 購物清單 -->
         <div v-show="currentTab === 'shopping'" class="pb-20">
             <h2 class="text-xl font-bold text-gray-800 mb-4 px-2">曼谷必買 Wishlist</h2>
             <div class="grid grid-cols-2 gap-4">
@@ -620,7 +614,7 @@
                          <div v-else class="w-full h-full flex items-center justify-center text-gray-300"><i class="fa-solid fa-image text-2xl"></i></div>
                     </div>
                     <h4 class="font-bold text-gray-700 text-sm">{{ item.name }}</h4>
-                    <button @click="shoppingList.splice(index, 1)" class="absolute top-2 right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+                    <button @click="deleteShoppingItem(index)" class="absolute top-2 right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <button @click="showShopModal = true" class="fixed bottom-24 right-6 w-14 h-14 bg-pink-500 text-white rounded-full shadow-xl shadow-pink-300 flex items-center justify-center text-2xl hover:scale-110 transition-transform z-40">
@@ -628,7 +622,7 @@
             </button>
         </div>
 
-        <!-- TAB 5: 花費記帳 -->
+        <!-- TAB 6: 花費記帳 -->
         <div v-show="currentTab === 'expense'" class="pb-20">
             <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-red-600 rounded-2xl p-6 text-white shadow-xl mb-6">
                 <div class="text-xs font-bold opacity-90 uppercase tracking-wider">總花費 (TWD)</div>
@@ -753,34 +747,41 @@
 <script>
     const { createApp, reactive, computed, ref, watch, onMounted } = Vue;
 
+    // 1. 更新為全新的 Firebase (Bango-trip 專案) 設定
     const firebaseConfig = {
-        apiKey: "AIzaSyAgUW-ovFDa8MGb3zMcMM7-3xxsmpuWy74",
-        authDomain: "tokyo-trip-2026-51850.firebaseapp.com",
-        projectId: "tokyo-trip-2026-51850",
-        storageBucket: "tokyo-trip-2026-51850.firebasestorage.app",
-        messagingSenderId: "345505510954",
-        appId: "1:345505510954:web:7e3d2972dc69811edcf553",
-        measurementId: "G-8EE5KDFT7G"
+        apiKey: "AIzaSyCLaOWFz_NoZN4GLfKDOiinZ2cEuINCfG0",
+        authDomain: "bango-trip.firebaseapp.com",
+        projectId: "bango-trip",
+        storageBucket: "bango-trip.firebasestorage.app",
+        messagingSenderId: "594907919980",
+        appId: "1:594907919980:web:a02873e04935a593224a49",
+        measurementId: "G-0VQMK6Q1KX"
     };
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+    // 2. 正確的 Gemini API 金鑰 (Google AI Studio Key)
+    const GEMINI_API_KEY = "AIzaSyCp4Fi3x2qHImLlllCczPSSPYO1heDB8sI";
 
     createApp({
         setup() {
             // 開場短影片狀態與關閉邏輯
             const showIntroVideo = ref(true);
             const isMuted = ref(true);
-            const introVideoRef = ref(null);
 
-            const closeIntroVideo = () => {
-                showIntroVideo.value = false;
-            };
+            const closeIntroVideo = () => { showIntroVideo.value = false; };
 
             const toggleMute = () => {
-                if (introVideoRef.value) {
-                    introVideoRef.value.muted = !introVideoRef.value.muted;
-                    isMuted.value = introVideoRef.value.muted;
+                const iframe = document.getElementById('introYoutubeIframe');
+                if (iframe && iframe.contentWindow) {
+                    if (isMuted.value) {
+                        iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+                        isMuted.value = false;
+                    } else {
+                        iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+                        isMuted.value = true;
+                    }
                 }
             };
 
@@ -788,13 +789,12 @@
             const selectedDateIndex = ref(0);
 
             // ==========================================
-            // GEMINI API HELPER FUNCTIONS
+            // GEMINI API HELPER FUNCTIONS (全使用解鎖金鑰)
             // ==========================================
             
             // 1. Gemini Text Generation & Google Search Grounding
             const callGeminiText = async (userQuery, systemPrompt = "", useSearch = false) => {
-                const apiKey = ""; // Runtime automatically injected by Canvas
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`;
                 
                 const payload = {
                     contents: [{ role: 'user', parts: [{ text: userQuery }] }]
@@ -836,8 +836,7 @@
 
             // 2. Gemini Structured JSON Output
             const callGeminiJson = async (userQuery, schema, systemPrompt = "") => {
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`;
                 
                 const payload = {
                     contents: [{ role: 'user', parts: [{ text: userQuery }] }],
@@ -872,8 +871,7 @@
 
             // 3. Gemini TTS for Thai Audio Speech
             const generateThaiSpeechUrl = async (textToSay) => {
-                const apiKey = "";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${GEMINI_API_KEY}`;
                 
                 const payload = {
                     contents: [{
@@ -1075,6 +1073,7 @@
                     transportType: 'car',
                     isVeggie: !!spot.isVeggie
                 });
+                saveToCloud();
                 alert(`已將「${spot.name}」加入至 Day ${selectedDateIndex.value + 1} 行程中！`);
             };
 
@@ -1195,32 +1194,31 @@
                 } else {
                     itineraryData[selectedDateIndex.value].push({ id: Date.now(), ...form });
                 }
+                saveToCloud();
                 showAddModal.value = false;
             };
 
             const deleteItineraryItem = (index) => {
                 if(confirm('確定要刪除這個行程嗎？')) {
                     itineraryData[selectedDateIndex.value].splice(index, 1);
-                }
-            };
-
-            const deleteItinerary = () => {
-                if(confirm('確定要刪除這個行程嗎？')) {
-                    const list = itineraryData[selectedDateIndex.value];
-                    const index = list.findIndex(i => i.id === editingId.value);
-                    if (index !== -1) list.splice(index, 1);
-                    showAddModal.value = false;
+                    saveToCloud();
                 }
             };
 
             const moveUp = (index) => {
                 const list = itineraryData[selectedDateIndex.value];
-                if (index > 0) [list[index - 1], list[index]] = [list[index], list[index - 1]];
+                if (index > 0) {
+                    [list[index - 1], list[index]] = [list[index], list[index - 1]];
+                    saveToCloud();
+                }
             };
 
             const moveDown = (index) => {
                 const list = itineraryData[selectedDateIndex.value];
-                if (index < list.length - 1) [list[index + 1], list[index]] = [list[index], list[index + 1]];
+                if (index < list.length - 1) {
+                    [list[index + 1], list[index]] = [list[index], list[index + 1]];
+                    saveToCloud();
+                }
             };
 
             // ==========================================
@@ -1245,7 +1243,13 @@
                     shoppingList.push({ ...shopForm });
                     shopForm.name = ''; shopForm.image = null;
                     showShopModal.value = false;
+                    saveToCloud();
                 }
+            };
+
+            const deleteShoppingItem = (index) => {
+                shoppingList.splice(index, 1);
+                saveToCloud();
             };
 
             const expenses = reactive([]);
@@ -1261,12 +1265,14 @@
                     });
                     showExpModal.value = false;
                     expForm.name = ''; expForm.amount = '';
+                    saveToCloud();
                 }
             };
 
             const deleteExpense = (index) => {
                 if(confirm('確定要刪除這筆花費紀錄嗎？')) {
                     expenses.splice(index, 1);
+                    saveToCloud();
                 }
             };
 
@@ -1295,13 +1301,66 @@
 
             const weather = reactive({ temp: '32', feelsLike: '36', text: '晴朗熱辣', icon: 'fa-sun' });
 
+            // ==========================================
+            // FIRESTORE CLOUD DATA SYNC (雙向即時同步)
+            // ==========================================
+            let isCloudUpdating = false;
+
+            const saveToCloud = async () => {
+                if (isCloudUpdating) return;
+                try {
+                    // Firestore 不支援嵌套陣列 (Array of Arrays)，因此將每天的行程包裝在物件中 ({ items: [...] })
+                    const formattedItinerary = itineraryData.map(dayItems => ({
+                        items: dayItems ? dayItems.map(item => ({ ...item })) : []
+                    }));
+
+                    await db.collection("bango_trip").doc("main_data").set({
+                        itinerary: formattedItinerary,
+                        shopping: shoppingList,
+                        expenses: expenses,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (e) {
+                    console.error("Firestore Save Error: ", e);
+                }
+            };
+
+            onMounted(() => {
+                // 即時監聽雲端資料庫更新
+                db.collection("bango_trip").doc("main_data").onSnapshot((doc) => {
+                    if (doc.exists) {
+                        isCloudUpdating = true;
+                        const data = doc.data();
+                        if (data.itinerary) {
+                            data.itinerary.forEach((day, idx) => {
+                                // 相容處理舊格式或新格式 ({ items: [...] })
+                                const items = Array.isArray(day) ? day : (day.items || []);
+                                itineraryData[idx] = items;
+                            });
+                        }
+                        if (data.shopping) {
+                            shoppingList.splice(0, shoppingList.length, ...data.shopping);
+                        }
+                        if (data.expenses) {
+                            expenses.splice(0, expenses.length, ...data.expenses);
+                        }
+                        setTimeout(() => { isCloudUpdating = false; }, 300);
+                    } else {
+                        // 初次使用存入預設資料
+                        saveToCloud();
+                    }
+                }, (error) => {
+                    console.error("Firestore Listen Error: ", error);
+                });
+            });
+
             return {
-                showIntroVideo, closeIntroVideo, isMuted, toggleMute, introVideoRef,
+                showIntroVideo, closeIntroVideo, isMuted, toggleMute,
                 currentTab, selectedDateIndex, tripDays, itineraryData, currentDayItinerary, veggieCards,
-                showAddModal, isEditing, form, editItinerary, saveItinerary, deleteItinerary, deleteItineraryItem, resetForm,
+                showAddModal, isEditing, form, editItinerary, saveItinerary, deleteItineraryItem, resetForm,
                 moveUp, moveDown,
                 currencyThb, currencyTwd, convertCurrency,
-                showShopModal, shoppingList, shopForm, handleImageUpload, saveShopItem,
+                showShopModal, shoppingList, shopForm, handleImageUpload, saveShopItem, deleteShoppingItem,
                 showExpModal, expenses, expForm, saveExpense, deleteExpense, totalExpenseTWD, expenseCash, expenseCard,
                 openMap, getCategoryColor, getCategoryIcon, getTransportIcon, getExpenseIcon,
                 currentHeaderImage, weather, exchangeRateText, exchangeRate,
