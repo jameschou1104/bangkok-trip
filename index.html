@@ -747,7 +747,7 @@
 <script>
     const { createApp, reactive, computed, ref, watch, onMounted } = Vue;
 
-    // 1. 更新為全新的 Firebase (Bango-trip 專案) 設定
+    // 1. Firebase 設定
     const firebaseConfig = {
         apiKey: "AIzaSyCLaOWFz_NoZN4GLfKDOiinZ2cEuINCfG0",
         authDomain: "bango-trip.firebaseapp.com",
@@ -761,9 +761,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 2. Gemini API 金鑰
-    // 提示：預覽環境中留空 ""，平台會自動注入有效金鑰；若部署至 GitHub Pages 請填入 AIzaSy... 開頭的有效金鑰
-    const GEMINI_API_KEY = "";
+    // 2. Gemini API 金鑰 (已更新為最新 Key)
+    const GEMINI_API_KEY = "AQ.Ab8RN6InKtNbyYPCjKYIgVtq6secO1g4tZwTlwGVbq0ws2B8ww";
 
     createApp({
         setup() {
@@ -817,8 +816,7 @@
                         });
                         const data = await res.json();
                         if (!res.ok) {
-                            const errorMsg = data.error?.message || `HTTP error! status: ${res.status}`;
-                            throw new Error(errorMsg);
+                            throw new Error(data.error?.message || `HTTP error! status: ${res.status}`);
                         }
                         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "無法取得 AI 回覆，請稍後再試。";
                         
@@ -863,8 +861,7 @@
                         });
                         const data = await res.json();
                         if (!res.ok) {
-                            const errorMsg = data.error?.message || `HTTP error! status: ${res.status}`;
-                            throw new Error(errorMsg);
+                            throw new Error(data.error?.message || `HTTP error! status: ${res.status}`);
                         }
                         const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                         return JSON.parse(jsonText);
@@ -901,8 +898,7 @@
                 });
                 const result = await res.json();
                 if (!res.ok) {
-                    const errorMsg = result.error?.message || `HTTP error! status: ${res.status}`;
-                    throw new Error(errorMsg);
+                    throw new Error(result.error?.message || `HTTP error! status: ${res.status}`);
                 }
                 const part = result?.candidates?.[0]?.content?.parts?.[0];
                 const audioData = part?.inlineData?.data;
