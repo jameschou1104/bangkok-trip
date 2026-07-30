@@ -70,7 +70,7 @@
             <div class="absolute inset-0 overflow-hidden pointer-events-none">
                 <iframe id="introYoutubeIframe"
                         class="w-[300vw] h-[300vh] min-w-[100%] min-h-[100%] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                        src="https://www.youtube.com/embed/2T0ZQ0Zacnw?autoplay=1&mute=1&controls=0&loop=1&playlist=2T0ZQ0Zacnw&playsinline=1&enablejsapi=1&rel=0"
+                        src="https://www.youtube.com/embed/2T0ZQ0Zacnw?autoplay=1&mute=1&controls=0&loop=1&playlist=2T0ZQ0Zacnw&playsinline=1&enablejsapi=1&rel=0&vq=hd1080"
                         title="Bangkok Trip Intro Video"
                         frameborder="0"
                         referrerpolicy="strict-origin-when-cross-origin"
@@ -1333,6 +1333,24 @@
             };
 
             onMounted(() => {
+                // 自動強制 YouTube 播放器載入高畫質 (HD 1080p)
+                window.onYouTubeIframeAPIReady = () => {
+                    new YT.Player('introYoutubeIframe', {
+                        events: {
+                            'onReady': (event) => {
+                                event.target.setPlaybackQuality('hd1080');
+                                event.target.playVideo();
+                            }
+                        }
+                    });
+                };
+                if (!document.getElementById('yt-api-script')) {
+                    const tag = document.createElement('script');
+                    tag.id = 'yt-api-script';
+                    tag.src = "https://www.youtube.com/iframe_api";
+                    document.head.appendChild(tag);
+                }
+
                 // 即時監聽雲端資料庫更新
                 db.collection("bango_trip").doc("main_data").onSnapshot((doc) => {
                     if (doc.exists) {
