@@ -761,8 +761,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 2. 正確的 Gemini API 金鑰 (Google AI Studio Key)
-    const GEMINI_API_KEY = "AQ.Ab8RN6JrH2299BVqxRfDnrID9kEdvUEP5c1ivXSa9rV5UJh-kw";
+    // 2. Gemini API 金鑰
+    // 提示：預覽環境中留空 ""，平台會自動注入有效金鑰；若部署至 GitHub Pages 請填入 AIzaSy... 開頭的有效金鑰
+    const GEMINI_API_KEY = "";
 
     createApp({
         setup() {
@@ -789,7 +790,7 @@
             const selectedDateIndex = ref(0);
 
             // ==========================================
-            // GEMINI API HELPER FUNCTIONS (全使用解鎖金鑰)
+            // GEMINI API HELPER FUNCTIONS
             // ==========================================
             
             // 1. Gemini Text Generation & Google Search Grounding
@@ -814,8 +815,11 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
-                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                         const data = await res.json();
+                        if (!res.ok) {
+                            const errorMsg = data.error?.message || `HTTP error! status: ${res.status}`;
+                            throw new Error(errorMsg);
+                        }
                         const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "無法取得 AI 回覆，請稍後再試。";
                         
                         let sources = [];
@@ -857,8 +861,11 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
-                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                         const data = await res.json();
+                        if (!res.ok) {
+                            const errorMsg = data.error?.message || `HTTP error! status: ${res.status}`;
+                            throw new Error(errorMsg);
+                        }
                         const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                         return JSON.parse(jsonText);
                     } catch (e) {
@@ -893,6 +900,10 @@
                     body: JSON.stringify(payload)
                 });
                 const result = await res.json();
+                if (!res.ok) {
+                    const errorMsg = result.error?.message || `HTTP error! status: ${res.status}`;
+                    throw new Error(errorMsg);
+                }
                 const part = result?.candidates?.[0]?.content?.parts?.[0];
                 const audioData = part?.inlineData?.data;
                 const mimeType = part?.inlineData?.mimeType;
