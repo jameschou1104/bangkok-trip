@@ -18,6 +18,8 @@
     <!-- Firebase 9 Compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -56,15 +58,11 @@
 
 <div id="app" class="app-container">
 
-    <!-- 1. 開場 YouTube 影片彈窗 (1080p 高畫質) -->
+    <!-- 1. 開場 YouTube 影片彈窗 (支援 1080p HD 與 聲音開關按鈕) -->
     <transition name="fade">
         <div v-if="showIntroVideo" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden">
             <div class="absolute inset-0 pointer-events-none scale-150 sm:scale-125">
-                <iframe class="w-full h-full border-0 pointer-events-none"
-                        src="https://www.youtube.com/embed/2T0ZQ0Zacnw?autoplay=1&mute=1&controls=0&loop=1&playlist=2T0ZQ0Zacnw&playsinline=1&enablejsapi=1&vq=hd1080"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        allow="autoplay">
-                </iframe>
+                <div id="intro-player" class="w-full h-full"></div>
             </div>
 
             <!-- 影片上方遮罩與文案 -->
@@ -75,8 +73,12 @@
                     <p class="text-yellow-200 text-xs mt-1 drop-shadow">10/09 - 10/18 Bangkok Trip</p>
                 </div>
 
-                <!-- 進入按鈕 -->
-                <div class="flex items-center justify-center pointer-events-auto pb-6">
+                <!-- 聲音切換與進入按鈕 -->
+                <div class="flex flex-col items-center space-y-3 pointer-events-auto pb-6">
+                    <button @click="toggleSound" class="bg-black/60 hover:bg-black/80 text-yellow-300 text-xs font-bold px-5 py-2.5 rounded-full border border-yellow-400/50 backdrop-blur-md shadow-lg transition-transform active:scale-95 flex items-center">
+                        <i :class="isMuted ? 'fa-solid fa-volume-xmark mr-2 text-red-400' : 'fa-solid fa-volume-high mr-2 text-emerald-400'"></i>
+                        {{ isMuted ? '點擊開啟影片聲音' : '聲音已開啟 (點擊靜音)' }}
+                    </button>
                     <button @click="closeIntroVideo" class="bg-gradient-to-r from-amber-500 to-red-600 text-white text-sm font-bold px-8 py-3 rounded-full shadow-2xl backdrop-blur-md active:scale-95 transition-transform">
                         進入行程與雲端同步 <i class="fa-solid fa-arrow-right ml-1"></i>
                     </button>
@@ -90,7 +92,6 @@
         <img :src="currentHeaderImage" alt="曼谷首頁" class="w-full h-full object-cover object-center transition-all duration-500">
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
         
-        <!-- 頂部九皇齋節主題橫幅 -->
         <div class="absolute top-4 left-4 right-4 z-20 bg-gradient-to-r from-yellow-400/95 via-amber-400/95 to-red-500/95 backdrop-blur-md rounded-2xl p-3 flex items-center justify-between border border-yellow-200/50 shadow-lg">
             <div class="flex items-center space-x-2">
                 <span class="jay-badge text-xs px-2.5 py-0.5 rounded-md">เจ 齋</span>
@@ -104,7 +105,6 @@
             </button>
         </div>
 
-        <!-- 導覽按鈕群 -->
         <div class="absolute bottom-6 right-4 flex space-x-2 z-20">
             <button @click="currentTab = 'itinerary'" 
                     :class="currentTab === 'itinerary' ? 'bg-amber-500 text-white scale-110 ring-2 ring-white' : 'bg-white/80 text-gray-700'" 
@@ -161,7 +161,7 @@
                 </div>
             </div>
 
-            <!-- 日期選擇器 (10/09 ~ 10/18) -->
+            <!-- 日期選擇器 -->
             <div class="flex space-x-3 overflow-x-auto no-scrollbar mb-5 pb-1">
                 <div v-for="(day, index) in tripDays" :key="index" 
                      @click="selectedDateIndex = index"
@@ -349,7 +349,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: 資訊與飯店住宿 -->
+        <!-- TAB 4: 資訊與飯店住宿 (Cross Vibe & Amari) -->
         <div v-show="currentTab === 'info'" class="space-y-6 pb-20">
             <div class="bg-white rounded-2xl p-5 card-shadow border border-amber-100">
                 <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-coins text-yellow-500 mr-2"></i> 匯率換算 (今日)</h3>
@@ -439,7 +439,7 @@
             </div>
         </div>
 
-        <!-- TAB 5: 購物清單 (含編輯與刪除) -->
+        <!-- TAB 5: 購物清單 (含黃色編輯鉛筆與刪除按鈕) -->
         <div v-show="currentTab === 'shopping'" class="pb-20">
             <h2 class="text-xl font-bold text-gray-800 mb-4 px-2">曼谷必買 Wishlist</h2>
             
@@ -615,10 +615,63 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    let player = null;
+
     createApp({
         setup() {
             const showIntroVideo = ref(true);
-            const closeIntroVideo = () => { showIntroVideo.value = false; };
+            const isMuted = ref(true);
+
+            const closeIntroVideo = () => { 
+                showIntroVideo.value = false; 
+                if (player && typeof player.pauseVideo === 'function') {
+                    player.pauseVideo();
+                }
+            };
+
+            const toggleSound = () => {
+                if (player && typeof player.unMute === 'function') {
+                    if (isMuted.value) {
+                        player.unMute();
+                        player.setVolume(100);
+                        isMuted.value = false;
+                    } else {
+                        player.mute();
+                        isMuted.value = true;
+                    }
+                }
+            };
+
+            // 初始化 YouTube Player
+            onMounted(() => {
+                window.onYouTubeIframeAPIReady = () => {
+                    player = new YT.Player('intro-player', {
+                        videoId: '2T0ZQ0Zacnw',
+                        playerVars: {
+                            'autoplay': 1,
+                            'controls': 0,
+                            'loop': 1,
+                            'playlist': '2T0ZQ0Zacnw',
+                            'playsinline': 1,
+                            'enablejsapi': 1,
+                            'vq': 'hd1080',
+                            'mute': 1
+                        },
+                        events: {
+                            'onReady': (event) => {
+                                event.target.playVideo();
+                                if (typeof event.target.setPlaybackQuality === 'function') {
+                                    event.target.setPlaybackQuality('hd1080');
+                                }
+                            }
+                        }
+                    });
+                };
+
+                if (window.YT && window.YT.Player) {
+                    window.onYouTubeIframeAPIReady();
+                }
+            });
 
             const currentTab = ref('itinerary');
             const selectedDateIndex = ref(0);
@@ -987,7 +1040,7 @@
             const weather = reactive({ temp: '32', feelsLike: '36', text: '晴朗熱辣', icon: 'fa-sun' });
 
             return {
-                showIntroVideo, closeIntroVideo, currentTab, selectedDateIndex, tripDays, currentDayItinerary,
+                showIntroVideo, isMuted, closeIntroVideo, toggleSound, currentTab, selectedDateIndex, tripDays, currentDayItinerary,
                 showAddModal, isEditing, form, editItinerary, saveItinerary, deleteItineraryItem, resetForm,
                 currencyThb, currencyTwd, convertCurrency,
                 showShopModal, isEditingShop, shoppingList, shopForm, openAddShopModal, editShopItem, handleImageUpload, saveShopItem, deleteShopItem,
