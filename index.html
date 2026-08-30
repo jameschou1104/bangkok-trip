@@ -1,1058 +1,2114 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     
+
     <!-- 全螢幕 Web App (PWA) 最佳化設定 -->
+
     <meta name="apple-mobile-web-app-capable" content="yes">
+
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <meta name="theme-color" content="#d97706">
+
     
+
     <title>曼谷之旅 Bangkok Trip - 九皇齋節特別版</title>
+
     <link rel="icon" href="icon.png" type="image/png">
+
     <link rel="apple-touch-icon" href="icon.png">
+
     
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
     <!-- Firebase 9 Compat SDKs -->
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <!-- YouTube IFrame API -->
+
     <script src="https://www.youtube.com/iframe_api"></script>
+
     
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
+
+
     <style>
+
         body {
+
             font-family: 'Noto Sans TC', sans-serif;
+
             background: linear-gradient(180deg, #fffbeb 0%, #fff1f2 50%, #ecfdf5 100%);
+
             overscroll-behavior-y: none;
+
         }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
+
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .app-container {
+
             width: 100%;
+
             margin: 0 auto;
+
             background-color: #fafaf9;
+
             min-height: 100vh;
+
             position: relative;
+
             box-shadow: 0 0 25px rgba(217, 119, 6, 0.12);
+
             padding-bottom: 90px;
+
         }
+
         .card-shadow { box-shadow: 0 8px 24px -4px rgba(217, 119, 6, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.04); }
+
         .festive-gradient { background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #dc2626 100%); }
+
         .jay-badge {
+
             background: #facc15;
+
             color: #b91c1c;
+
             font-weight: 900;
+
             border: 1.5px solid #dc2626;
+
             box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+
         }
+
         .fade-leave-active { transition: opacity 0.6s ease; }
+
         .fade-leave-to { opacity: 0; }
+
     </style>
+
 </head>
+
 <body>
+
+
 
 <div id="app" class="app-container">
 
+
+
     <!-- 1. 開場 YouTube 影片彈窗 (支援 1080p HD 與 聲音開關按鈕) -->
+
     <transition name="fade">
+
         <div v-if="showIntroVideo" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden">
+
             <div class="absolute inset-0 pointer-events-none scale-150 sm:scale-125">
+
                 <div id="intro-player" class="w-full h-full"></div>
+
             </div>
+
+
 
             <!-- 影片上方遮罩與文案 -->
+
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 flex flex-col justify-between p-6 pointer-events-none z-10">
+
                 <div class="pt-8 text-center pointer-events-auto">
+
                     <span class="jay-badge text-sm px-3 py-1 rounded-full shadow-lg">เจ 泰國九皇齋節</span>
+
                     <h1 class="text-white text-2xl font-black mt-2 tracking-wider drop-shadow-md">曼谷浪漫蔬食之旅</h1>
-                    <p class="text-yellow-200 text-xs mt-1 drop-shadow">10/09 (五) - 10/18 (日) Bangkok Trip</p>
+
+                    <p class="text-yellow-200 text-xs mt-1 drop-shadow">10/09 - 10/18 Bangkok Trip</p>
+
                 </div>
+
+
 
                 <!-- 聲音切換與進入按鈕 -->
+
                 <div class="flex flex-col items-center space-y-3 pointer-events-auto pb-6">
+
                     <button @click="toggleSound" class="bg-black/60 hover:bg-black/80 text-yellow-300 text-xs font-bold px-5 py-2.5 rounded-full border border-yellow-400/50 backdrop-blur-md shadow-lg transition-transform active:scale-95 flex items-center">
+
                         <i :class="isMuted ? 'fa-solid fa-volume-xmark mr-2 text-red-400' : 'fa-solid fa-volume-high mr-2 text-emerald-400'"></i>
+
                         {{ isMuted ? '點擊開啟影片聲音' : '聲音已開啟 (點擊靜音)' }}
+
                     </button>
+
                     <button @click="closeIntroVideo" class="bg-gradient-to-r from-amber-500 to-red-600 text-white text-sm font-bold px-8 py-3 rounded-full shadow-2xl backdrop-blur-md active:scale-95 transition-transform">
+
                         進入行程與雲端同步 <i class="fa-solid fa-arrow-right ml-1"></i>
+
                     </button>
+
                 </div>
+
             </div>
+
         </div>
+
     </transition>
+
     
+
     <!-- 2. 主 App 頂部 Header -->
+
     <header class="relative w-full h-[390px] overflow-hidden bg-amber-600">
+
         <img :src="currentHeaderImage" alt="曼谷首頁" class="w-full h-full object-cover object-center transition-all duration-500">
+
         <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
+
         
+
         <div class="absolute top-4 left-4 right-4 z-20 bg-gradient-to-r from-yellow-400/95 via-amber-400/95 to-red-500/95 backdrop-blur-md rounded-2xl p-3 flex items-center justify-between border border-yellow-200/50 shadow-lg">
+
             <div class="flex items-center space-x-2">
+
                 <span class="jay-badge text-xs px-2.5 py-0.5 rounded-md">เจ 齋</span>
+
                 <div>
+
                     <div class="text-xs font-black text-red-950">10月曼谷九皇齋節</div>
+
                     <div class="text-[10px] text-red-800 font-medium">Bangkok Vegetarian Festival</div>
+
                 </div>
+
             </div>
+
             <button @click="currentTab = 'veggie'" class="bg-red-700 text-yellow-300 text-xs font-bold px-3 py-1.5 rounded-xl shadow border border-yellow-300/30 active:scale-95 transition-transform">
+
                 <i class="fa-solid fa-utensils mr-1"></i>齋食小卡
+
             </button>
+
         </div>
+
+
 
         <div class="absolute bottom-6 right-4 flex space-x-2 z-20">
+
             <button @click="currentTab = 'itinerary'" 
+
                     :class="currentTab === 'itinerary' ? 'bg-amber-500 text-white scale-110 ring-2 ring-white' : 'bg-white/80 text-gray-700'" 
+
                     class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all backdrop-blur-sm p-2" title="行程">
+
                 <i class="fa-solid fa-map-location-dot"></i>
+
             </button>
+
+
 
             <button @click="currentTab = 'ai'" 
+
                     :class="currentTab === 'ai' ? 'bg-gradient-to-r from-purple-600 to-amber-500 text-white scale-110 ring-2 ring-amber-300' : 'bg-white/80 text-purple-700'" 
+
                     class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all backdrop-blur-sm p-2" title="AI 智慧特助">
+
                 <i class="fa-solid fa-wand-magic-sparkles text-sm animate-pulse"></i>
+
             </button>
+
+
 
             <button @click="currentTab = 'veggie'" 
+
                     :class="currentTab === 'veggie' ? 'bg-yellow-400 scale-110 ring-2 ring-red-600' : 'bg-white/80'" 
+
                     class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all backdrop-blur-sm p-2" title="齋食小卡">
+
                 <span class="text-red-700 font-black text-xs">เจ</span>
+
             </button>
+
+
 
             <button @click="currentTab = 'info'" 
+
                     :class="currentTab === 'info' ? 'bg-amber-500 text-white scale-110 ring-2 ring-white' : 'bg-white/80 text-gray-700'" 
+
                     class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all backdrop-blur-sm p-2" title="資訊與住宿">
+
                 <i class="fa-solid fa-circle-info"></i>
+
             </button>
+
+
 
             <button @click="currentTab = 'shopping'" 
+
                     :class="currentTab === 'shopping' ? 'bg-amber-500 text-white scale-110 ring-2 ring-white' : 'bg-white/80 text-gray-700'" 
+
                     class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all backdrop-blur-sm p-2" title="購物">
+
                 <i class="fa-solid fa-bag-shopping"></i>
+
             </button>
+
+
 
             <button @click="currentTab = 'expense'" 
+
                     :class="currentTab === 'expense' ? 'bg-amber-500 text-white scale-110 ring-2 ring-white' : 'bg-white/80 text-gray-700'" 
+
                     class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all backdrop-blur-sm p-2" title="記帳">
+
                 <i class="fa-solid fa-coins"></i>
+
             </button>
+
         </div> 
+
     </header>
 
+
+
     <!-- 3. 主要內容區域 -->
+
     <div class="relative -mt-6 bg-[#fafaf9] rounded-t-[32px] px-5 pt-6 z-10 min-h-[500px] max-w-[480px] mx-auto border-t border-amber-200/60">
 
+
+
         <!-- TAB 1: 每日行程 -->
+
         <div v-show="currentTab === 'itinerary'">
+
             <div class="festive-gradient rounded-2xl p-4 text-white mb-4 flex items-center justify-between shadow-xl ring-4 ring-amber-100">
+
                 <div>
+
                     <div class="text-xs font-bold text-yellow-200 uppercase tracking-wider"><i class="fa-solid fa-location-arrow mr-1"></i> 曼谷 Bangkok</div>
+
                     <div class="text-3xl font-black mt-1 tracking-tight">{{ weather.temp }}°C</div>
+
                     <div class="text-xs opacity-90 mt-1">體感 {{ weather.feelsLike }}°C • 適合戶外行程</div>
+
                 </div>
+
                 <div class="text-center">
+
                     <i :class="['fa-solid', weather.icon]" class="text-4xl text-yellow-200 animate-pulse"></i>
+
                     <div class="text-xs font-bold mt-2 text-yellow-100">{{ weather.text }}</div>
+
                 </div>
+
             </div>
 
-            <!-- 日期選擇器 (已對齊 2026/10/9 週五 ~ 10/18 週日) -->
+
+
+            <!-- 日期選擇器 -->
+
             <div class="flex space-x-3 overflow-x-auto no-scrollbar mb-5 pb-1">
+
                 <div v-for="(day, index) in tripDays" :key="index" 
+
                      @click="selectedDateIndex = index"
+
                      :class="selectedDateIndex === index ? 'bg-amber-500 text-white shadow-lg ring-2 ring-amber-300 scale-105' : 'bg-white text-gray-400 border border-amber-100'"
+
                      class="flex-shrink-0 w-14 h-18 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer p-2">
+
                     <span class="text-[10px] font-bold uppercase tracking-wider">{{ day.week }}</span>
+
                     <span class="text-xl font-black mt-0.5">{{ day.date }}</span>
+
                 </div>
+
             </div>
+
+
 
             <!-- 當日行程時間軸 -->
+
             <div class="space-y-0 relative pb-20">
+
                 <div class="absolute left-[26px] top-4 bottom-10 w-0.5 bg-amber-200/60 -z-0"></div>
 
+
+
                 <div v-if="currentDayItinerary.length === 0" class="text-center py-10 bg-white/60 rounded-2xl border border-dashed border-amber-200">
+
                     <i class="fa-solid fa-calendar-plus text-amber-300 text-3xl mb-2"></i>
+
                     <div class="text-xs font-bold text-gray-500">今日尚無規劃行程</div>
+
                     <div class="text-[10px] text-gray-400 mt-1">點擊右下角 ＋ 或前往 AI 特助自動推薦！</div>
+
                 </div>
+
+
 
                 <div v-for="(item, index) in currentDayItinerary" :key="item.id || index" class="relative pb-8 group">
+
                     <!-- 去程航班 (Day 1) -->
+
                     <div v-if="selectedDateIndex === 0 && index === 0" class="pl-14 relative" @click="openMap(item.name)">
+
                         <div class="absolute left-0 top-0 w-14 flex flex-col items-center z-10">
+
                             <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center ring-4 ring-[#fafaf9]">
+
                                 <i class="fa-solid fa-plane-departure"></i>
+
                             </div>
+
                         </div>
+
                         <div class="bg-white rounded-2xl p-4 card-shadow border-l-4 border-amber-500">
+
                             <div class="flex justify-between items-start mb-1.5">
+
                                 <span class="bg-amber-100 text-amber-800 font-bold text-[10px] px-2 py-0.5 rounded-full">星宇 JX745</span>
+
                                 <span class="text-gray-400 text-xs font-medium">{{ item.time }}</span>
+
                             </div>
+
                             <h3 class="font-bold text-gray-800 text-base">{{ item.name }}</h3>
+
                             <div class="mt-2 flex justify-between text-xs font-bold text-gray-600 bg-amber-50/50 p-2 rounded-xl">
+
                                 <div><span class="text-gray-400 font-normal">TPE 台北</span> 13:55</div>
+
                                 <i class="fa-solid fa-arrow-right text-amber-400 self-center"></i>
+
                                 <div><span class="text-gray-400 font-normal">BKK 曼谷</span> 16:50</div>
+
                             </div>
+
                             <p class="text-[10px] text-gray-400 mt-2">{{ item.notes }}</p>
+
                         </div>
+
                     </div>
+
+
 
                     <!-- 回程航班 (Day 10) -->
+
                     <div v-else-if="selectedDateIndex === 9 && index === currentDayItinerary.length - 1" class="pl-14 relative">
+
                         <div class="absolute left-0 top-0 w-14 flex flex-col items-center z-10">
+
                             <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center ring-4 ring-[#fafaf9]">
+
                                 <i class="fa-solid fa-plane-arrival"></i>
+
                             </div>
+
                         </div>
+
                         <div class="bg-white rounded-2xl p-4 card-shadow border-l-4 border-amber-500">
+
                             <div class="flex justify-between items-start mb-1.5">
+
                                 <span class="bg-amber-100 text-amber-800 font-bold text-[10px] px-2 py-0.5 rounded-full">星宇 JX746</span>
+
                                 <span class="text-gray-400 text-xs font-medium">{{ item.time }}</span>
+
                             </div>
+
                             <h3 class="font-bold text-gray-800 text-base">{{ item.name }}</h3>
+
                             <div class="mt-2 flex justify-between text-xs font-bold text-gray-600 bg-amber-50/50 p-2 rounded-xl">
+
                                 <div><span class="text-gray-400 font-normal">BKK 曼谷</span> 17:50</div>
+
                                 <i class="fa-solid fa-arrow-right text-amber-400 self-center"></i>
+
                                 <div><span class="text-gray-400 font-normal">TPE 台北</span> 22:30</div>
+
                             </div>
+
                             <div class="flex justify-end mt-2 space-x-2">
+
                                 <button @click.stop="editItinerary(item)" class="text-gray-300 hover:text-amber-500"><i class="fa-solid fa-pen-to-square"></i></button>
+
                                 <button @click.stop="deleteItineraryItem(index)" class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+
                             </div>
+
                         </div>
+
                     </div>
+
+
 
                     <!-- 一般行程卡片 -->
+
                     <div v-else class="pl-14 relative">
+
                         <div class="absolute left-0 top-0 w-14 flex flex-col items-center z-10">
+
                             <div :class="getCategoryColor(item.category)" class="w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md ring-4 ring-[#fafaf9] cursor-pointer">
+
                                 <i :class="getCategoryIcon(item.category)"></i>
+
                             </div>
+
                         </div>
+
+
 
                         <div class="bg-white rounded-2xl p-4 card-shadow border border-amber-100/60 transition-transform cursor-pointer" @click="openMap(item.name, item.isVeggie)">
+
                             <div class="flex justify-between items-start">
+
                                 <div>
+
                                     <div class="flex items-center space-x-1.5">
+
                                         <h3 class="font-bold text-gray-800 text-sm">{{ item.name }}</h3>
+
                                         <span v-if="item.isVeggie" class="jay-badge text-[9px] px-1.5 py-0.2 rounded">เจ 素食</span>
+
                                     </div>
+
                                     <p class="text-xs text-gray-400 mt-1"><i class="fa-regular fa-clock mr-1"></i>{{ item.time }}</p>
+
                                 </div>
+
                                 <div class="flex space-x-2">
+
                                     <button @click.stop="editItinerary(item)" class="text-gray-300 hover:text-amber-500"><i class="fa-solid fa-pen-to-square"></i></button>
+
                                     <button @click.stop="deleteItineraryItem(index)" class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+
                                 </div>
+
                             </div>
+
                             <div class="flex flex-wrap gap-1.5 mt-2.5">
+
                                 <span class="text-[10px] px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-bold">{{ item.category }}</span>
+
                             </div>
+
                             <p v-if="item.notes" class="text-xs text-gray-500 mt-2 border-t pt-2 border-dashed border-amber-100">
+
                                 {{ item.notes }}
+
                             </p>
+
                         </div>
+
                     </div>
 
+
+
                 </div>
+
             </div>
+
+
 
             <button @click="showAddModal = true; isEditing = false; resetForm()" class="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-r from-amber-500 to-red-500 text-white rounded-full shadow-xl shadow-amber-300 flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition-transform z-40">
+
                 <i class="fa-solid fa-plus"></i>
+
             </button>
+
         </div>
+
+
 
         <!-- TAB 2: Gemini AI 智慧特助 -->
+
         <div v-show="currentTab === 'ai'" class="space-y-6 pb-20">
+
             <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 shadow-sm space-y-2">
+
                 <h4 class="font-bold text-amber-900 text-xs flex items-center">
+
                     <i class="fa-solid fa-key text-amber-600 mr-1.5"></i> Gemini API 金鑰設定 (本機安全儲存)
+
                 </h4>
+
                 <div class="flex space-x-2">
+
                     <input v-model="userApiKeyInput" type="password" placeholder="請貼上您的 AQ. 或 AIzaSy... 金鑰" class="flex-1 bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs outline-none">
+
                     <button @click="saveUserApiKey" class="bg-amber-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow hover:bg-amber-700">儲存金鑰</button>
+
                 </div>
+
                 <div class="text-[10px] text-amber-800">金鑰將安全保存在您的瀏覽器中，不會上傳至公開原始碼，確保不會遭到 Google 封鎖！</div>
+
             </div>
+
+
 
             <div class="bg-gradient-to-r from-purple-800 via-indigo-800 to-amber-700 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden border border-purple-300/30">
+
                 <div class="flex items-center space-x-2 text-yellow-300 text-xs font-bold uppercase tracking-wider mb-1">
+
                     <i class="fa-solid fa-sparkles"></i>
+
                     <span>Powered by Gemini API</span>
+
                 </div>
+
                 <h2 class="text-xl font-black text-white drop-shadow">曼谷 AI 旅遊與齋食助理</h2>
+
                 <p class="text-xs text-purple-100 font-medium mt-1">智慧搜尋曼谷最新資訊、客製泰語點餐語音、一鍵規劃每日景點！</p>
+
             </div>
 
+
+
             <div class="bg-white rounded-2xl p-4 card-shadow border border-amber-100">
+
                 <h3 class="font-bold text-gray-800 text-sm mb-1 flex items-center">
+
                     <i class="fa-solid fa-magnifying-glass-location text-amber-500 mr-2"></i> 曼谷實時搜尋 & 隱藏版景點
+
                 </h3>
+
                 <div class="flex space-x-2 mb-3 mt-2">
+
                     <input v-model="aiSearchQuery" @keyup.enter="handleAiSearch" type="text" placeholder="例如：推薦 2026 曼谷 BTS Asok 附近的素食餐廳" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-400">
+
                     <button @click="handleAiSearch" :disabled="isAiSearching" class="bg-amber-500 text-white font-bold text-xs px-4 py-2 rounded-xl shadow disabled:opacity-50 flex items-center">
+
                         <i v-if="isAiSearching" class="fa-solid fa-circle-notch fa-spin mr-1"></i>搜尋
+
                     </button>
+
                 </div>
+
                 <div v-if="aiSearchResult" class="mt-3 p-3.5 bg-amber-50/50 rounded-xl border border-amber-200 text-xs text-gray-700 leading-relaxed space-y-2">
+
                     <div class="font-bold text-amber-900 border-b border-amber-200/60 pb-1.5"><i class="fa-solid fa-robot mr-1"></i> AI 搜尋結果</div>
+
                     <div class="whitespace-pre-line text-xs">{{ aiSearchResult.text }}</div>
+
                 </div>
+
             </div>
 
+
+
             <div class="bg-white rounded-2xl p-4 card-shadow border border-amber-100">
+
                 <h3 class="font-bold text-gray-800 text-sm mb-1 flex items-center">
+
                     <i class="fa-solid fa-calendar-plus text-emerald-500 mr-2"></i> AI 一鍵推薦當日行程
+
                 </h3>
+
                 <button @click="generateDayItineraryAi" :disabled="isGeneratingPlan" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs py-2.5 rounded-xl shadow mt-2 flex items-center justify-center">
+
                     <i v-if="isGeneratingPlan" class="fa-solid fa-circle-notch fa-spin mr-1.5"></i>
-                    自動推薦 Day {{ selectedDateIndex + 1 }} ({{ tripDays[selectedDateIndex].week }} 10/{{ tripDays[selectedDateIndex].date }}) 精選行程
+
+                    自動推薦 Day {{ selectedDateIndex + 1 }} 精選行程
+
                 </button>
+
                 <div v-if="aiPlanItems.length > 0" class="mt-4 space-y-2">
+
                     <div class="text-xs font-bold text-emerald-900 flex justify-between items-center">
+
                         <span>💡 推薦景點：</span>
+
                         <button @click="importAllAiSpots" class="text-[10px] bg-emerald-600 text-white px-2 py-1 rounded-lg font-bold">全部導入</button>
+
                     </div>
+
                     <div v-for="(spot, idx) in aiPlanItems" :key="idx" class="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200 flex justify-between items-center">
+
                         <div class="space-y-0.5">
+
                             <div class="font-bold text-xs text-emerald-950">{{ spot.name }} <span v-if="spot.isVeggie" class="jay-badge text-[9px] px-1 rounded">เจ 素食</span></div>
+
                             <div class="text-[10px] text-emerald-700">{{ spot.time }} • {{ spot.category }}</div>
+
                         </div>
+
                         <button @click="importSingleSpot(spot)" class="bg-emerald-600 text-white text-[10px] px-2.5 py-1.5 rounded-lg font-bold">＋ 匯入</button>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
+
 
         <!-- TAB 3: 齋食專區 -->
+
         <div v-show="currentTab === 'veggie'" class="space-y-6 pb-20">
+
             <div class="bg-gradient-to-r from-yellow-400 via-amber-500 to-red-600 rounded-2xl p-5 text-red-950 shadow-xl relative overflow-hidden">
+
                 <h3 class="font-black text-lg mb-1 flex items-center text-white drop-shadow">
+
                     <span class="jay-badge text-xs px-2.5 py-0.5 rounded mr-2">เจ</span> 九皇齋節 泰文點餐溝通卡
+
                 </h3>
+
                 <p class="text-xs text-yellow-100 font-medium">曼谷餐廳出示給店家看，順利享用全素美食！</p>
+
             </div>
+
             <div class="space-y-3">
+
                 <div v-for="(card, i) in veggieCards" :key="i" class="bg-white rounded-2xl p-4 card-shadow border-l-4 border-yellow-400">
+
                     <span class="text-xs bg-yellow-100 text-red-700 font-black px-2 py-0.5 rounded">{{ card.label }}</span>
+
                     <div class="mt-2 font-black text-gray-800 text-xl tracking-wide">{{ card.thai }}</div>
+
                     <div class="text-xs text-amber-700 font-bold mt-0.5">讀音: {{ card.pronunciation }}</div>
+
                     <div class="text-xs text-gray-600 mt-2 bg-amber-50 p-2.5 rounded-xl border border-amber-100">💡 釋義：{{ card.zh }}</div>
+
                 </div>
+
             </div>
+
         </div>
+
+
 
         <!-- TAB 4: 資訊與飯店住宿 (Cross Vibe & Amari) -->
+
         <div v-show="currentTab === 'info'" class="space-y-6 pb-20">
+
             <div class="bg-white rounded-2xl p-5 card-shadow border border-amber-100">
+
                 <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i class="fa-solid fa-coins text-yellow-500 mr-2"></i> 匯率換算 (今日)</h3>
+
                 <div class="flex items-center space-x-4">
+
                     <div class="flex-1">
+
                         <label class="text-xs text-gray-400 block mb-1">泰銖 (THB)</label>
+
                         <input type="number" v-model="currencyThb" @input="convertCurrency" class="w-full bg-gray-50 rounded-xl px-3 py-2 text-lg font-bold outline-none">
+
                     </div>
+
                     <i class="fa-solid fa-right-left text-amber-300"></i>
+
                     <div class="flex-1">
+
                         <label class="text-xs text-gray-400 block mb-1">台幣 (TWD)</label>
+
                         <input type="number" v-model="currencyTwd" readonly class="w-full bg-gray-50 rounded-xl px-3 py-2 text-lg font-bold text-gray-500">
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- 星宇航班資訊 -->
+
             <div class="bg-white rounded-2xl overflow-hidden card-shadow border border-amber-100">
+
                 <div class="bg-amber-50 px-5 py-3 border-b border-amber-100 flex justify-between items-center">
+
                     <h3 class="font-bold text-amber-900 text-sm"><i class="fa-solid fa-plane mr-2"></i>航班資訊 (星宇 JX745 / JX746)</h3>
+
                 </div>
+
                 <div class="p-5 space-y-4">
+
                     <div class="flex items-center justify-between">
+
                         <div class="text-center">
+
                             <div class="text-2xl font-black text-gray-800">TPE</div>
+
                             <div class="text-xs text-gray-400 font-medium">13:55</div>
+
                         </div>
+
                         <div class="flex-1 px-4 text-center">
-                            <div class="text-xs text-amber-700 font-bold mb-1">10/09 (五) 去程</div>
+
+                            <div class="text-xs text-amber-700 font-bold mb-1">10/09 去程</div>
+
                             <div class="h-0.5 bg-amber-200 relative">
+
                                 <i class="fa-solid fa-plane absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-amber-500"></i>
+
                             </div>
+
                             <div class="text-[10px] text-gray-400 mt-1">3h 55m</div>
+
                         </div>
+
                         <div class="text-center">
+
                             <div class="text-2xl font-black text-gray-800">BKK</div>
+
                             <div class="text-xs text-gray-400 font-medium">16:50</div>
+
                         </div>
+
                     </div>
+
                     <div class="border-t border-dashed border-gray-200 my-2"></div>
+
                     <div class="flex items-center justify-between">
+
                         <div class="text-center">
+
                             <div class="text-2xl font-black text-gray-800">BKK</div>
+
                             <div class="text-xs text-gray-400 font-medium">17:50</div>
+
                         </div>
+
                         <div class="flex-1 px-4 text-center">
-                            <div class="text-xs text-amber-700 font-bold mb-1">10/18 (日) 回程</div>
+
+                            <div class="text-xs text-amber-700 font-bold mb-1">10/18 回程</div>
+
                             <div class="h-0.5 bg-amber-200 relative">
+
                                 <i class="fa-solid fa-plane absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-amber-500 rotate-180"></i>
+
                             </div>
+
                             <div class="text-[10px] text-gray-400 mt-1">3h 40m</div>
+
                         </div>
+
                         <div class="text-center">
+
                             <div class="text-2xl font-black text-gray-800">TPE</div>
+
                             <div class="text-xs text-gray-400 font-medium">22:30</div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <!-- 飯店住宿資訊 (含 Cross Vibe & Amari) -->
+
             <div class="bg-white rounded-2xl p-5 card-shadow border border-amber-100">
+
                 <h3 class="font-bold text-gray-800 mb-3 flex items-center">
+
                     <i class="fa-solid fa-hotel text-purple-500 mr-2"></i> 飯店住宿資訊
+
                 </h3>
+
                 <div class="space-y-3">
+
                     <div @click="openMap('Cross Vibe Bangkok Sukhumvit')" class="bg-purple-50 p-3.5 rounded-xl border border-purple-100 cursor-pointer hover:bg-purple-100/70 transition-colors">
+
                         <div class="flex justify-between items-start">
+
                             <div>
+
                                 <div class="font-bold text-sm text-purple-950">Cross Vibe Bangkok Sukhumvit</div>
+
                                 <div class="text-xs text-purple-700 mt-0.5"><i class="fa-solid fa-location-dot mr-1"></i>曼谷市區 (鄰近 BTS On Nut 站)</div>
+
                             </div>
+
                             <span class="text-[10px] bg-purple-600 text-white font-bold px-2.5 py-1 rounded-md">導航</span>
+
                         </div>
+
                     </div>
+
+
 
                     <div @click="openMap('Amari Hua Hin')" class="bg-teal-50 p-3.5 rounded-xl border border-teal-100 cursor-pointer hover:bg-teal-100/70 transition-colors">
+
                         <div class="flex justify-between items-start">
+
                             <div>
+
                                 <div class="font-bold text-sm text-teal-950">Amari Hua Hin</div>
+
                                 <div class="text-xs text-teal-700 mt-0.5"><i class="fa-solid fa-location-dot mr-1"></i>華欣度假酒店 (Hua Hin)</div>
+
                             </div>
+
                             <span class="text-[10px] bg-teal-600 text-white font-bold px-2.5 py-1 rounded-md">導航</span>
+
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
+
 
         <!-- TAB 5: 購物清單 (含黃色編輯鉛筆與刪除按鈕) -->
+
         <div v-show="currentTab === 'shopping'" class="pb-20">
+
             <h2 class="text-xl font-bold text-gray-800 mb-4 px-2">曼谷必買 Wishlist</h2>
+
             
+
             <div v-if="shoppingList.length === 0" class="text-center py-12 bg-white/60 rounded-2xl border border-dashed border-amber-200">
+
                 <i class="fa-solid fa-bag-shopping text-pink-300 text-3xl mb-2"></i>
+
                 <div class="text-xs font-bold text-gray-500">尚無必買商品紀錄</div>
+
                 <div class="text-[10px] text-gray-400 mt-1">點擊右下角 ＋ 新增想買的商品與照片！</div>
+
             </div>
+
+
 
             <div class="grid grid-cols-2 gap-4">
+
                 <div v-for="(item, index) in shoppingList" :key="index" class="bg-white rounded-2xl p-3 card-shadow border border-amber-100 relative">
+
                     <div class="aspect-square bg-gray-100 rounded-xl mb-2 overflow-hidden relative">
+
                          <img v-if="item.image" :src="item.image" class="w-full h-full object-cover">
+
                          <div v-else class="w-full h-full flex items-center justify-center text-gray-300"><i class="fa-solid fa-image text-2xl"></i></div>
+
                     </div>
+
                     <h4 class="font-bold text-gray-700 text-sm truncate pr-14">{{ item.name }}</h4>
+
                     
+
                     <!-- 編輯與刪除按鈕 -->
+
                     <div class="absolute top-2 right-2 flex space-x-1 z-10">
+
                         <button @click.stop="editShopItem(index)" class="w-7 h-7 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs shadow-md hover:bg-amber-600 transition-colors" title="編輯">
+
                             <i class="fa-solid fa-pen-to-square"></i>
+
                         </button>
+
                         <button @click.stop="deleteShopItem(index)" class="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow-md hover:bg-red-600 transition-colors" title="刪除">
+
                             <i class="fa-solid fa-xmark"></i>
+
                         </button>
+
                     </div>
+
                 </div>
+
             </div>
+
             
+
             <button @click="openAddShopModal" class="fixed bottom-24 right-6 w-14 h-14 bg-pink-500 text-white rounded-full shadow-xl shadow-pink-300 flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition-transform z-40">
+
                 <i class="fa-solid fa-plus"></i>
+
             </button>
+
         </div>
+
+
 
         <!-- TAB 6: 花費記帳 (含黃色編輯鉛筆與刪除按鈕) -->
+
         <div v-show="currentTab === 'expense'" class="pb-20">
+
             <div class="bg-gradient-to-r from-amber-500 via-amber-600 to-red-600 rounded-2xl p-6 text-white shadow-xl mb-6">
+
                 <div class="text-xs font-bold opacity-90 uppercase tracking-wider">總花費 (TWD)</div>
+
                 <div class="text-4xl font-black mt-1">$ {{ totalExpenseTWD }}</div>
+
                 <div class="mt-4 flex justify-between text-xs font-bold opacity-90">
+
                     <span>現金: ${{ expenseCash }}</span>
+
                     <span>信用卡: ${{ expenseCard }}</span>
+
                 </div>
+
             </div>
+
+
 
             <div v-if="expenses.length === 0" class="text-center py-12 bg-white/60 rounded-2xl border border-dashed border-amber-200">
+
                 <i class="fa-solid fa-receipt text-emerald-300 text-3xl mb-2"></i>
+
                 <div class="text-xs font-bold text-gray-500">尚無記帳紀錄</div>
+
                 <div class="text-[10px] text-gray-400 mt-1">點擊右下角 ＋ 開始記錄你的旅遊開銷！</div>
+
             </div>
+
+
 
             <div class="space-y-3">
+
                 <div v-for="(exp, index) in expenses" :key="index" class="bg-white rounded-2xl p-4 card-shadow border border-amber-100 flex justify-between items-center">
+
                     <div class="flex items-center min-w-0 flex-1 mr-2">
+
                         <div class="w-10 h-10 rounded-full bg-amber-50 flex-shrink-0 flex items-center justify-center mr-3 text-lg">
+
                             <i :class="getExpenseIcon(exp.category)" class="text-amber-600"></i>
+
                         </div>
+
                         <div class="min-w-0">
+
                             <div class="font-bold text-gray-800 text-sm truncate">{{ exp.name }}</div>
+
                             <div class="text-xs text-gray-400">{{ exp.date }} · {{ exp.payment }}</div>
+
                         </div>
+
                     </div>
+
                     <div class="flex items-center space-x-2 flex-shrink-0">
+
                         <div class="text-right mr-1">
+
                             <div class="font-bold text-gray-800 text-sm">฿{{ exp.amount }}</div>
+
                             <div class="text-[10px] text-gray-400">約 ${{ Math.round(exp.amount * exchangeRate) }}</div>
+
                         </div>
+
                         
+
                         <!-- 黃色鉛筆編輯圖示按鈕 -->
+
                         <button @click.stop="editExpense(index)" class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-md hover:bg-amber-600 transition-colors" title="編輯">
+
                             <i class="fa-solid fa-pen-to-square text-xs"></i>
+
                         </button>
+
                         
+
                         <!-- 紅色垃圾桶刪除圖示按鈕 -->
+
                         <button @click.stop="deleteExpense(index)" class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:bg-red-600 transition-colors" title="刪除">
+
                             <i class="fa-solid fa-trash-can text-xs"></i>
+
                         </button>
+
                     </div>
+
                 </div>
+
             </div>
+
             
+
             <button @click="openAddExpModal" class="fixed bottom-24 right-6 w-14 h-14 bg-emerald-500 text-white rounded-full shadow-xl shadow-emerald-200 flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition-transform z-40">
+
                 <i class="fa-solid fa-plus"></i>
+
             </button>
+
         </div>
 
+
+
     </div>
+
+
 
     <!-- Modals (彈窗區域) -->
+
     
+
     <!-- 行程 Modal -->
+
     <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+
         <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+
             <h3 class="text-xl font-bold mb-4">{{ isEditing ? '編輯行程' : '新增行程' }}</h3>
+
             <div class="space-y-3">
+
                 <select v-model="form.category" class="w-full bg-gray-50 p-3 rounded-xl border-none text-sm">
+
                     <option value="景點">景點</option><option value="美食">美食</option><option value="按摩">按摩/SPA</option><option value="購物">購物</option><option value="住宿">住宿</option><option value="航班">航班</option><option value="其他">其他</option>
+
                 </select>
+
                 <div class="flex items-center space-x-2 bg-yellow-50 p-3 rounded-xl border border-yellow-200">
+
                     <input type="checkbox" id="veggieCheck" v-model="form.isVeggie" class="w-4 h-4 text-yellow-600 rounded">
+
                     <label for="veggieCheck" class="text-xs font-bold text-red-700"><span class="jay-badge text-[10px] px-1 rounded mr-1">เจ</span> 素食/齋食友善店家</label>
+
                 </div>
+
                 <input v-model="form.name" type="text" placeholder="名稱" class="w-full bg-gray-50 p-3 rounded-xl border-none text-sm">
+
                 <input v-model="form.time" placeholder="時間 (例如 12:00)" type="text" class="w-full bg-gray-50 p-3 rounded-xl border-none text-sm">
+
                 <textarea v-model="form.notes" placeholder="備註" class="w-full bg-gray-50 p-3 rounded-xl border-none h-20 text-sm"></textarea>
+
             </div>
+
             <div class="mt-6 flex space-x-3">
+
                 <button @click="showAddModal = false" class="flex-1 bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-sm">取消</button>
+
                 <button @click="saveItinerary" class="flex-1 bg-amber-500 text-white py-3 rounded-xl font-bold text-sm">儲存</button>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <!-- 購物清單 Modal -->
+
     <div v-if="showShopModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+
         <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+
             <h3 class="text-xl font-bold mb-4">{{ isEditingShop ? '編輯購物商品' : '新增購物清單' }}</h3>
+
             <div class="space-y-3">
+
                 <input v-model="shopForm.name" type="text" placeholder="商品名稱" class="w-full bg-gray-50 p-3 rounded-xl border-none text-sm">
+
                 <label class="block w-full bg-gray-50 p-3 rounded-xl text-center text-gray-400 cursor-pointer border border-dashed border-gray-300 text-xs">
+
                     <i class="fa-solid fa-camera mr-2"></i>{{ shopForm.image ? '重新上傳商品圖片' : '上傳商品圖片' }}
+
                     <input type="file" @change="handleImageUpload" class="hidden" accept="image/*">
+
                 </label>
+
                 <div v-if="shopForm.image" class="relative rounded-xl overflow-hidden aspect-video bg-gray-100 border border-gray-200">
+
                     <img :src="shopForm.image" class="w-full h-full object-cover">
+
                     <button @click="shopForm.image = null" class="absolute top-2 right-2 bg-black/60 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs"><i class="fa-solid fa-xmark"></i></button>
+
                 </div>
+
             </div>
+
             <div class="mt-6 flex space-x-3">
+
                 <button @click="showShopModal = false" class="flex-1 bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-sm">取消</button>
+
                 <button @click="saveShopItem" class="flex-1 bg-pink-500 text-white py-3 rounded-xl font-bold text-sm">儲存</button>
+
             </div>
+
         </div>
+
     </div>
 
+
+
     <!-- 花費記帳 Modal -->
+
     <div v-if="showExpModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+
         <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+
             <h3 class="text-xl font-bold mb-4">{{ isEditingExp ? '編輯花費紀錄' : '新增花費紀錄' }}</h3>
+
             <div class="space-y-3">
+
                 <select v-model="expForm.category" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
+
                     <option value="飲食">飲食</option><option value="交通">交通</option><option value="購物">購物</option><option value="按摩">按摩/SPA</option><option value="門票">門票</option><option value="住宿">住宿</option><option value="其他">其他</option>
+
                 </select>
+
                 <input v-model="expForm.name" type="text" placeholder="項目名稱" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
+
                 <input v-model="expForm.amount" type="number" placeholder="金額 (泰銖 THB)" class="w-full bg-gray-50 p-3 rounded-xl text-sm">
+
                 <div class="flex space-x-2">
+
                      <button @click="expForm.payment = '現金'" :class="expForm.payment === '現金' ? 'bg-amber-500 text-white font-bold' : 'bg-gray-100 text-gray-500'" class="flex-1 py-2 rounded-xl text-xs">現金</button>
+
                      <button @click="expForm.payment = '信用卡'" :class="expForm.payment === '信用卡' ? 'bg-amber-500 text-white font-bold' : 'bg-gray-100 text-gray-500'" class="flex-1 py-2 rounded-xl text-xs">信用卡</button>
+
                 </div>
+
             </div>
+
             <div class="mt-6 flex space-x-3">
+
                 <button @click="showExpModal = false" class="flex-1 bg-gray-100 text-gray-500 py-3 rounded-xl font-bold text-sm">取消</button>
+
                 <button @click="saveExpense" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold text-sm">儲存</button>
+
             </div>
+
         </div>
+
     </div>
+
+
 
 </div>
 
+
+
 <script>
+
     const { createApp, reactive, computed, ref, onMounted } = Vue;
 
+
+
     const firebaseConfig = {
+
         apiKey: "AIzaSyAgUW-ovFDa8MGb3zMcMM7-3xxsmpuWy74",
+
         authDomain: "tokyo-trip-2026-51850.firebaseapp.com",
+
         projectId: "tokyo-trip-2026-51850",
+
         storageBucket: "tokyo-trip-2026-51850.firebasestorage.app",
+
         messagingSenderId: "345505510954",
+
         appId: "1:345505510954:web:7e3d2972dc69811edcf553",
+
         measurementId: "G-8EE5KDFT7G"
+
     };
+
     
+
     firebase.initializeApp(firebaseConfig);
+
     const db = firebase.firestore();
+
+
 
     let player = null;
 
+
+
     createApp({
+
         setup() {
+
             const showIntroVideo = ref(true);
+
             const isMuted = ref(true);
 
+
+
             const closeIntroVideo = () => { 
+
                 showIntroVideo.value = false; 
+
                 if (player && typeof player.pauseVideo === 'function') {
+
                     player.pauseVideo();
+
                 }
+
             };
+
+
 
             const toggleSound = () => {
+
                 if (player && typeof player.unMute === 'function') {
+
                     if (isMuted.value) {
+
                         player.unMute();
+
                         player.setVolume(100);
+
                         isMuted.value = false;
+
                     } else {
+
                         player.mute();
+
                         isMuted.value = true;
+
                     }
+
                 }
+
             };
+
+
 
             // 初始化 YouTube Player
+
             onMounted(() => {
+
                 window.onYouTubeIframeAPIReady = () => {
+
                     player = new YT.Player('intro-player', {
+
                         videoId: '2T0ZQ0Zacnw',
+
                         playerVars: {
+
                             'autoplay': 1,
+
                             'controls': 0,
+
                             'loop': 1,
+
                             'playlist': '2T0ZQ0Zacnw',
+
                             'playsinline': 1,
+
                             'enablejsapi': 1,
+
                             'vq': 'hd1080',
+
                             'mute': 1
+
                         },
+
                         events: {
+
                             'onReady': (event) => {
+
                                 event.target.playVideo();
+
                                 if (typeof event.target.setPlaybackQuality === 'function') {
+
                                     event.target.setPlaybackQuality('hd1080');
+
                                 }
+
                             }
+
                         }
+
                     });
+
                 };
+
+
 
                 if (window.YT && window.YT.Player) {
+
                     window.onYouTubeIframeAPIReady();
+
                 }
+
             });
 
+
+
             const currentTab = ref('itinerary');
+
             const selectedDateIndex = ref(0);
 
+
+
             // 本機 API Key 儲存管理
+
             const userApiKeyInput = ref(localStorage.getItem('gemini_api_key') || '');
+
             const saveUserApiKey = () => {
+
                 if(userApiKeyInput.value.trim()) {
+
                     localStorage.setItem('gemini_api_key', userApiKeyInput.value.trim());
+
                     alert("Gemini API 金鑰已成功儲存於您的瀏覽器中！");
+
                 }
+
             };
+
             const getApiKey = () => userApiKeyInput.value.trim() || "";
 
+
+
             // Gemini API 呼叫核心
+
             const callGeminiText = async (userQuery, systemPrompt = "", useSearch = false) => {
+
                 const apiKey = getApiKey();
+
                 if (!apiKey) throw new Error("請先在 AI 智慧特助分頁輸入並儲存您的 Gemini API 金鑰！");
+
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
                 
+
                 const payload = { contents: [{ role: 'user', parts: [{ text: userQuery }] }] };
+
                 if (systemPrompt) payload.systemInstruction = { parts: [{ text: systemPrompt }] };
+
                 if (useSearch) payload.tools = [{ "googleSearch": {} }];
 
+
+
                 const res = await fetch(apiUrl, {
+
                     method: 'POST',
+
                     headers: { 'Content-Type': 'application/json' },
+
                     body: JSON.stringify(payload)
+
                 });
+
                 const data = await res.json();
+
                 if (!res.ok) throw new Error(data.error?.message || `HTTP error! status: ${res.status}`);
+
                 return { text: data.candidates?.[0]?.content?.parts?.[0]?.text || "無回覆" };
+
             };
+
+
 
             const callGeminiJson = async (userQuery, schema, systemPrompt = "") => {
+
                 const apiKey = getApiKey();
+
                 if (!apiKey) throw new Error("請先在 AI 智慧特助分頁輸入並儲存您的 Gemini API 金鑰！");
+
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
                 
+
                 const payload = {
+
                     contents: [{ role: 'user', parts: [{ text: userQuery }] }],
+
                     generationConfig: { responseMimeType: "application/json", responseSchema: schema }
+
                 };
+
                 if (systemPrompt) payload.systemInstruction = { parts: [{ text: systemPrompt }] };
 
+
+
                 const res = await fetch(apiUrl, {
+
                     method: 'POST',
+
                     headers: { 'Content-Type': 'application/json' },
+
                     body: JSON.stringify(payload)
+
                 });
+
                 const data = await res.json();
+
                 if (!res.ok) throw new Error(data.error?.message || `HTTP error! status: ${res.status}`);
+
                 return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+
             };
+
+
 
             // AI 搜尋狀態
+
             const aiSearchQuery = ref('');
+
             const isAiSearching = ref(false);
+
             const aiSearchResult = ref(null);
+
             const handleAiSearch = async () => {
+
                 if (!aiSearchQuery.value.trim()) return;
+
                 isAiSearching.value = true;
+
                 aiSearchResult.value = null;
+
                 try {
+
                     const result = await callGeminiText(aiSearchQuery.value, "曼谷旅遊與蔬食專家", true);
+
                     aiSearchResult.value = result;
+
                 } catch (err) { alert("搜尋失敗：" + err.message); }
+
                 finally { isAiSearching.value = false; }
+
             };
+
+
 
             // AI 一鍵推薦
+
             const isGeneratingPlan = ref(false);
+
             const aiPlanItems = ref([]);
+
             const generateDayItineraryAi = async () => {
+
                 isGeneratingPlan.value = true;
+
                 aiPlanItems.value = [];
+
                 const dayObj = tripDays[selectedDateIndex.value];
+
                 const query = `Recommend 3 spots in Bangkok for Day ${selectedDateIndex.value + 1} (${dayObj.week} Oct ${dayObj.date}).`;
+
                 const schema = {
+
                     type: "ARRAY",
+
                     items: {
+
                         type: "OBJECT",
+
                         properties: {
+
                             "name": { "type": "STRING" },
+
                             "time": { "type": "STRING" },
+
                             "category": { "type": "STRING" },
+
                             "notes": { "type": "STRING" },
+
                             "isVeggie": { "type": "BOOLEAN" }
+
                         },
+
                         required: ["name", "time", "category", "notes", "isVeggie"]
+
                     }
+
                 };
+
                 try {
+
                     aiPlanItems.value = await callGeminiJson(query, schema, "Bangkok travel planner");
+
                 } catch (err) { alert("產生行程失敗：" + err.message); }
+
                 finally { isGeneratingPlan.value = false; }
+
             };
+
+
 
             const importSingleSpot = (spot) => {
+
                 if (!itineraryData[selectedDateIndex.value]) itineraryData[selectedDateIndex.value] = [];
+
                 itineraryData[selectedDateIndex.value].push({
+
                     id: Date.now() + Math.random(),
+
                     category: spot.category || '景點',
+
                     name: spot.name,
+
                     time: spot.time || '14:00',
+
                     notes: spot.notes || '',
+
                     isVeggie: !!spot.isVeggie
+
                 });
+
                 saveAllToCloud();
+
                 alert(`已將「${spot.name}」加入行程！`);
+
             };
+
             const importAllAiSpots = () => { aiPlanItems.value.forEach(s => importSingleSpot(s)); };
 
+
+
             // 匯率
+
             const currencyThb = ref(1000);
+
             const currencyTwd = ref(0);
+
             const exchangeRate = ref(0.977);
+
             const convertCurrency = () => { currencyTwd.value = Math.round(currencyThb.value * exchangeRate.value); };
 
-            // 2026 年 10 月正確對齊：10/09 為週五 (FRI) 起算至 10/18 週日 (SUN)
+
+
+            // 日期與預設行程資料
+
             const tripDays = [
+
                 { week: 'FRI', date: '09' }, { week: 'SAT', date: '10' },
+
                 { week: 'SUN', date: '11' }, { week: 'MON', date: '12' },
+
                 { week: 'TUE', date: '13' }, { week: 'WED', date: '14' },
+
                 { week: 'THU', date: '15' }, { week: 'FRI', date: '16' },
+
                 { week: 'SAT', date: '17' }, { week: 'SUN', date: '18' }
+
             ];
+
+
 
             const defaultItinerary = Array(10).fill().map(() => []); 
+
             defaultItinerary[0] = [
+
                 { id: 1, category: '航班', name: '台北 TPE 飛往 曼谷 BKK (星宇 JX745)', time: '13:55', notes: '班機 13:55 起飛，預計 16:50 抵達 Suvarnabhumi 國際機場', isVeggie: false },
+
                 { id: 2, category: '美食', name: '喬德夜市 Jodd Fairs', time: '19:30', notes: '品嚐熱門曼谷夜市美食與九皇齋節 (เจ) 素食小吃攤', isVeggie: true }
-            ];
-            defaultItinerary[1] = [
-                { id: 3, category: '購物', name: '恰圖恰週末市集 Chatuchak Market', time: '10:00', notes: '週六必逛！全球最大市集，採買特色香氛與服飾', isVeggie: false },
-                { id: 4, category: '美食', name: 'May Veggie Home 蔬食餐廳', time: '13:00', notes: '道地泰式蔬食綠咖哩與泰式炒河粉', isVeggie: true }
-            ];
-            defaultItinerary[2] = [
-                { id: 5, category: '景點', name: '曼谷大皇宮 & 鄭王廟 (Wat Arun)', time: '09:00', notes: '換上泰服拍攝，體驗搭乘昭披耶河接駁船', isVeggie: false },
-                { id: 6, category: '購物', name: 'ICONSIAM 暹羅天地', time: '14:00', notes: '逛室內水上市場區，品嚐素食泰式甜點與芒果糯米飯', isVeggie: true },
-                { id: 7, category: '按摩', name: 'Let\'s Relax SPA 按摩', time: '18:00', notes: '放鬆泰式古法按摩 2 小時', isVeggie: false }
-            ];
-            defaultItinerary[3] = [
-                { id: 8, category: '景點', name: '大城古蹟一日遊 Ayutthaya', time: '08:30', notes: '包車參觀瑪哈泰寺樹抱佛頭與柴瓦塔那蘭寺', isVeggie: false }
-            ];
-            defaultItinerary[4] = [
-                { id: 9, category: '購物', name: 'CentralwOrld & 邊逛邊吃', time: '11:30', notes: '拜四面佛、逛 CentralwOrld 與 Big C 採買名產', isVeggie: false }
-            ];
-            defaultItinerary[5] = [
-                { id: 10, category: '美食', name: 'Broccoli Revolution 蔬食簡餐', time: '12:00', notes: 'Sukhumvit 巷弄內的時尚蔬食咖啡廳', isVeggie: true }
-            ];
-            defaultItinerary[6] = [
-                { id: 11, category: '美食', name: '唐人街耀華力路 Chinatown Night Tour', time: '18:00', notes: '感受九皇齋節最熱鬧的唐人街素食燈會與攤販', isVeggie: true }
-            ];
-            defaultItinerary[7] = [
-                { id: 12, category: '按摩', name: 'Health Land SPA', time: '14:00', notes: '放鬆精油 Spa 舒緩連日逛街雙腿', isVeggie: false }
-            ];
-            defaultItinerary[8] = [
-                { id: 13, category: '景點', name: 'Ari 文青區特色咖啡廳與選物店', time: '13:30', notes: '悠閒午後探索曼谷質感巷弄小店', isVeggie: false }
-            ];
-            defaultItinerary[9] = [
-                { id: 14, category: '購物', name: 'BKK 機場免稅店採買', time: '14:30', notes: '辦理退稅、免稅店購買伴手禮盒', isVeggie: false },
-                { id: 15, category: '航班', name: '曼谷 BKK 飛回 台北 TPE (星宇 JX746)', time: '17:50', notes: '班機 17:50 起飛，預計 22:30 抵達桃園國際機場', isVeggie: false }
+
             ];
 
+            defaultItinerary[1] = [
+
+                { id: 3, category: '景點', name: '曼谷大皇宮 & 鄭王廟 (Wat Arun)', time: '09:00', notes: '換上泰服拍攝，體驗搭乘昭披耶河接駁船', isVeggie: false },
+
+                { id: 4, category: '美食', name: 'May Veggie Home 蔬食餐廳', time: '12:30', notes: '道地泰式蔬食綠咖哩與泰式炒河粉', isVeggie: true }
+
+            ];
+
+            defaultItinerary[2] = [
+
+                { id: 5, category: '購物', name: 'ICONSIAM 暹羅天地', time: '11:00', notes: '逛室內水上市場區，品嚐素食泰式甜點與芒果糯米飯', isVeggie: true },
+
+                { id: 6, category: '按摩', name: 'Let\'s Relax SPA 按摩', time: '16:00', notes: '放鬆泰式古法按摩 2 小時', isVeggie: false }
+
+            ];
+
+            defaultItinerary[3] = [
+
+                { id: 7, category: '購物', name: '恰圖恰週末市集 Chatuchak Market', time: '10:00', notes: '曼谷最大市集爆買服飾與紀念品', isVeggie: false }
+
+            ];
+
+            defaultItinerary[4] = [
+
+                { id: 8, category: '景點', name: '大城古蹟一日遊 Ayutthaya', time: '08:30', notes: '包車參觀瑪哈泰寺樹抱佛頭與柴瓦塔那蘭寺', isVeggie: false }
+
+            ];
+
+            defaultItinerary[5] = [
+
+                { id: 9, category: '購物', name: 'CentralwOrld & 邊逛邊吃', time: '11:30', notes: '拜四面佛、逛 CentralwOrld 與 Big C 採買名產', isVeggie: false }
+
+            ];
+
+            defaultItinerary[6] = [
+
+                { id: 10, category: '美食', name: 'Broccoli Revolution 蔬食簡餐', time: '12:00', notes: 'Sukhumvit 巷弄內的時尚蔬食咖啡廳', isVeggie: true }
+
+            ];
+
+            defaultItinerary[7] = [
+
+                { id: 11, category: '美食', name: '唐人街耀華力路 Chinatown Night Tour', time: '18:00', notes: '感受九皇齋節最熱鬧的唐人街素食燈會與攤販', isVeggie: true }
+
+            ];
+
+            defaultItinerary[8] = [
+
+                { id: 12, category: '按摩', name: 'Health Land SPA', time: '14:00', notes: '回台前的放鬆精油 Spa', isVeggie: false }
+
+            ];
+
+            defaultItinerary[9] = [
+
+                { id: 13, category: '購物', name: 'BKK 機場免稅店採買', time: '14:30', notes: '辦理退稅、免稅店購買禮盒', isVeggie: false },
+
+                { id: 14, category: '航班', name: '曼谷 BKK 飛回 台北 TPE (星宇 JX746)', time: '17:50', notes: '班機 17:50 起飛，預計 22:30 抵達桃園國際機場', isVeggie: false }
+
+            ];
+
+
+
             const itineraryData = reactive(defaultItinerary);
+
             const shoppingList = reactive([]);
+
             const expenses = reactive([]);
+
+
 
             let isCloudUpdating = false;
 
+
+
             // 存入 Firebase 雲端
+
             const saveAllToCloud = async () => {
+
                 if (isCloudUpdating) return;
+
                 try {
+
                     const safeItinerary = itineraryData.map(dayList => ({ items: dayList }));
+
                     await db.collection("trip_data").doc("main_trip").set({
+
                         itinerary: safeItinerary,
+
                         shopping: shoppingList,
+
                         expenses: expenses,
+
                         updatedAt: new Date()
+
                     });
+
                 } catch (e) { console.error("雲端儲存失敗:", e); }
+
             };
+
+
 
             // 從 Firebase 載入資料
+
             onMounted(async () => {
+
                 try {
+
                     const doc = await db.collection("trip_data").doc("main_trip").get();
+
                     if (doc.exists) {
+
                         isCloudUpdating = true;
+
                         const data = doc.data();
+
                         if (data.itinerary && data.itinerary.length > 0) {
+
                             data.itinerary.forEach((dayObj, idx) => {
+
                                 if (dayObj && dayObj.items && dayObj.items.length > 0) {
+
                                     itineraryData[idx] = dayObj.items;
+
                                 }
+
                             });
+
                         }
+
                         if (data.shopping) {
+
                             shoppingList.splice(0, shoppingList.length, ...data.shopping);
+
                         }
+
                         if (data.expenses) {
+
                             expenses.splice(0, expenses.length, ...data.expenses);
+
                         }
+
                         setTimeout(() => { isCloudUpdating = false; }, 500);
+
                     } else {
+
                         saveAllToCloud();
+
                     }
+
                 } catch (e) { console.error("載入雲端資料失敗:", e); }
+
             });
 
+
+
             // 行程 Modal 與編輯邏輯
+
             const showAddModal = ref(false);
+
             const isEditing = ref(false);
+
             const editingId = ref(null);
+
             const form = reactive({ category: '景點', name: '', time: '', notes: '', isVeggie: false });
+
             const resetForm = () => { Object.assign(form, { category: '景點', name: '', time: '', notes: '', isVeggie: false }); };
 
+
+
             const editItinerary = (item) => {
+
                 isEditing.value = true; editingId.value = item.id;
+
                 Object.assign(form, item); showAddModal.value = true;
+
             };
+
+
 
             const saveItinerary = () => {
+
                 if (!itineraryData[selectedDateIndex.value]) itineraryData[selectedDateIndex.value] = [];
+
                 if (isEditing.value) {
+
                     const list = itineraryData[selectedDateIndex.value];
+
                     const idx = list.findIndex(i => i.id === editingId.value);
+
                     if (idx !== -1) Object.assign(list[idx], form);
+
                 } else {
+
                     itineraryData[selectedDateIndex.value].push({ id: Date.now(), ...form });
+
                 }
+
                 showAddModal.value = false;
+
                 saveAllToCloud();
+
             };
+
+
 
             const deleteItineraryItem = (index) => {
+
                 if(confirm('確定要刪除這個行程嗎？')) {
+
                     itineraryData[selectedDateIndex.value].splice(index, 1);
+
                     saveAllToCloud();
+
                 }
+
             };
+
+
 
             const currentDayItinerary = computed(() => itineraryData[selectedDateIndex.value] || []);
+
             const currentHeaderImage = computed(() => 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1000&q=80');
 
+
+
             // 購物 Wishlist Modal 與編輯/刪除邏輯
+
             const showShopModal = ref(false);
+
             const isEditingShop = ref(false);
+
             const editingShopIndex = ref(null);
+
             const shopForm = reactive({ name: '', image: null });
 
+
+
             const openAddShopModal = () => {
+
                 isEditingShop.value = false;
+
                 editingShopIndex.value = null;
+
                 shopForm.name = '';
+
                 shopForm.image = null;
+
                 showShopModal.value = true;
+
             };
+
+
 
             const editShopItem = (index) => {
+
                 isEditingShop.value = true;
+
                 editingShopIndex.value = index;
+
                 const target = shoppingList[index];
+
                 shopForm.name = target.name;
+
                 shopForm.image = target.image || null;
+
                 showShopModal.value = true;
+
             };
+
+
 
             const handleImageUpload = (e) => {
+
                 const file = e.target.files[0];
+
                 if (!file) return;
+
                 const reader = new FileReader();
+
                 reader.readAsDataURL(file);
+
                 reader.onload = (event) => { shopForm.image = event.target.result; };
+
             };
+
+
 
             const saveShopItem = () => {
+
                 if (shopForm.name) {
+
                     if (isEditingShop.value && editingShopIndex.value !== null) {
+
                         shoppingList[editingShopIndex.value] = { ...shopForm };
+
                     } else {
+
                         shoppingList.push({ ...shopForm });
+
                     }
+
                     showShopModal.value = false;
+
                     saveAllToCloud();
+
                 }
+
             };
+
+
 
             const deleteShopItem = (index) => {
+
                 if (confirm('確定要刪除這個購物商品嗎？')) {
+
                     shoppingList.splice(index, 1);
+
                     saveAllToCloud();
+
                 }
+
             };
+
+
 
             // 花費記帳 Modal 與編輯/刪除邏輯
+
             const showExpModal = ref(false);
+
             const isEditingExp = ref(false);
+
             const editingExpIndex = ref(null);
+
             const expForm = reactive({ category: '飲食', name: '', amount: '', payment: '現金' });
 
+
+
             const openAddExpModal = () => {
+
                 isEditingExp.value = false;
+
                 editingExpIndex.value = null;
+
                 expForm.category = '飲食';
+
                 expForm.name = '';
+
                 expForm.amount = '';
+
                 expForm.payment = '現金';
+
                 showExpModal.value = true;
+
             };
+
+
 
             const editExpense = (index) => {
+
                 isEditingExp.value = true;
+
                 editingExpIndex.value = index;
+
                 const target = expenses[index];
+
                 expForm.category = target.category || '飲食';
+
                 expForm.name = target.name;
+
                 expForm.amount = target.amount;
+
                 expForm.payment = target.payment || '現金';
+
                 showExpModal.value = true;
+
             };
+
+
 
             const saveExpense = () => {
+
                 if (expForm.name && expForm.amount) {
+
                     const expData = {
+
                         ...expForm,
-                        date: tripDays[selectedDateIndex.value].week + ' 10/' + tripDays[selectedDateIndex.value].date,
+
+                        date: tripDays[selectedDateIndex.value].week + ' ' + tripDays[selectedDateIndex.value].date,
+
                         amount: parseInt(expForm.amount)
+
                     };
+
                     if (isEditingExp.value && editingExpIndex.value !== null) {
+
                         expenses[editingExpIndex.value] = expData;
+
                     } else {
+
                         expenses.push(expData);
+
                     }
+
                     showExpModal.value = false;
+
                     saveAllToCloud();
+
                 }
+
             };
+
+
 
             const deleteExpense = (index) => {
+
                 if(confirm('確定要刪除這筆花費紀錄嗎？')) {
+
                     expenses.splice(index, 1);
+
                     saveAllToCloud();
+
                 }
+
             };
+
+
 
             const totalExpenseTWD = computed(() => Math.round(expenses.reduce((sum, item) => sum + (item.amount * exchangeRate.value), 0)));
+
             const expenseCash = computed(() => Math.round(expenses.filter(i => i.payment === '現金').reduce((sum, i) => sum + (i.amount * exchangeRate.value), 0)));
+
             const expenseCard = computed(() => Math.round(expenses.filter(i => i.payment === '信用卡').reduce((sum, i) => sum + (i.amount * exchangeRate.value), 0)));
 
+
+
             const openMap = (location, isVeggie = false) => {
+
                 window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location + (isVeggie ? ' vegan Bangkok' : ' 曼谷'))}`, '_blank');
+
             };
 
+
+
             const getCategoryColor = (cat) => ({ '景點': 'bg-emerald-500', '美食': 'bg-amber-500', '按摩': 'bg-teal-500', '購物': 'bg-pink-500', '住宿': 'bg-purple-500', '航班': 'bg-red-500' }[cat] || 'bg-amber-500');
+
             const getCategoryIcon = (cat) => `fa-solid ${{ '景點': 'fa-camera', '美食': 'fa-utensils', '按摩': 'fa-spa', '購物': 'fa-bag-shopping', '住宿': 'fa-bed', '航班': 'fa-plane' }[cat] || 'fa-map-pin'}`;
+
             const getExpenseIcon = (cat) => `fa-solid ${{ '飲食': 'fa-utensils', '交通': 'fa-car', '購物': 'fa-bag-shopping', '按摩': 'fa-spa', '門票': 'fa-ticket', '住宿': 'fa-bed' }[cat] || 'fa-coins'}`;
 
+
+
             const veggieCards = [
+
                 { label: '吃健康素/純素', thai: 'มังสวิรัติ (Mangsawirat)', pronunciation: 'Mang-sa-wi-rat', zh: '吃素 (不含肉類、海鮮)' },
+
                 { label: '不要加肉 / 不要海鮮', thai: 'ไม่ใส่เนื้อสัตว์ / ไม่ใส่อาหารทะเล', pronunciation: 'Mai sai nuea-sat / Mai sai a-han ta-lay', zh: '請勿放入任何肉類與海鮮食材' },
+
                 { label: '不要魚露 / 不要蠔油', thai: 'ไม่ใส่น้ำปลา / ไม่ใส่น้ำมันหอย', pronunciation: 'Mai sai nam-pla / Mai sai nam-man-hoi', zh: '請勿使用魚露與蠔油調味' }
+
             ];
+
+
 
             const weather = reactive({ temp: '32', feelsLike: '36', text: '晴朗熱辣', icon: 'fa-sun' });
 
+
+
             return {
+
                 showIntroVideo, isMuted, closeIntroVideo, toggleSound, currentTab, selectedDateIndex, tripDays, currentDayItinerary,
+
                 showAddModal, isEditing, form, editItinerary, saveItinerary, deleteItineraryItem, resetForm,
+
                 currencyThb, currencyTwd, convertCurrency,
+
                 showShopModal, isEditingShop, shoppingList, shopForm, openAddShopModal, editShopItem, handleImageUpload, saveShopItem, deleteShopItem,
+
                 showExpModal, isEditingExp, expenses, expForm, openAddExpModal, editExpense, saveExpense, deleteExpense, totalExpenseTWD, expenseCash, expenseCard,
+
                 openMap, getCategoryColor, getCategoryIcon, getExpenseIcon, currentHeaderImage, weather,
+
                 aiSearchQuery, isAiSearching, aiSearchResult, handleAiSearch,
+
                 isGeneratingPlan, aiPlanItems, generateDayItineraryAi, importSingleSpot, importAllAiSpots, veggieCards,
+
                 userApiKeyInput, saveUserApiKey
+
             };
+
         }
+
     }).mount('#app');
+
 </script>
+
 </body>
-</html>
+
+</html> 
+
