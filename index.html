@@ -70,7 +70,7 @@
                 <div class="pt-8 text-center pointer-events-auto">
                     <span class="jay-badge text-sm px-3 py-1 rounded-full shadow-lg">เจ 泰國九皇齋節</span>
                     <h1 class="text-white text-2xl font-black mt-2 tracking-wider drop-shadow-md">曼谷浪漫蔬食之旅</h1>
-                    <p class="text-yellow-200 text-xs mt-1 drop-shadow">10/09 - 10/18 Bangkok Trip</p>
+                    <p class="text-yellow-200 text-xs mt-1 drop-shadow">10/09 (五) - 10/18 (日) Bangkok Trip</p>
                 </div>
 
                 <!-- 聲音切換與進入按鈕 -->
@@ -161,7 +161,7 @@
                 </div>
             </div>
 
-            <!-- 日期選擇器 -->
+            <!-- 日期選擇器 (已對齊 2026/10/9 週五 ~ 10/18 週日) -->
             <div class="flex space-x-3 overflow-x-auto no-scrollbar mb-5 pb-1">
                 <div v-for="(day, index) in tripDays" :key="index" 
                      @click="selectedDateIndex = index"
@@ -313,7 +313,7 @@
                 </h3>
                 <button @click="generateDayItineraryAi" :disabled="isGeneratingPlan" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs py-2.5 rounded-xl shadow mt-2 flex items-center justify-center">
                     <i v-if="isGeneratingPlan" class="fa-solid fa-circle-notch fa-spin mr-1.5"></i>
-                    自動推薦 Day {{ selectedDateIndex + 1 }} 精選行程
+                    自動推薦 Day {{ selectedDateIndex + 1 }} ({{ tripDays[selectedDateIndex].week }} 10/{{ tripDays[selectedDateIndex].date }}) 精選行程
                 </button>
                 <div v-if="aiPlanItems.length > 0" class="mt-4 space-y-2">
                     <div class="text-xs font-bold text-emerald-900 flex justify-between items-center">
@@ -378,7 +378,7 @@
                             <div class="text-xs text-gray-400 font-medium">13:55</div>
                         </div>
                         <div class="flex-1 px-4 text-center">
-                            <div class="text-xs text-amber-700 font-bold mb-1">10/09 去程</div>
+                            <div class="text-xs text-amber-700 font-bold mb-1">10/09 (五) 去程</div>
                             <div class="h-0.5 bg-amber-200 relative">
                                 <i class="fa-solid fa-plane absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-amber-500"></i>
                             </div>
@@ -396,7 +396,7 @@
                             <div class="text-xs text-gray-400 font-medium">17:50</div>
                         </div>
                         <div class="flex-1 px-4 text-center">
-                            <div class="text-xs text-amber-700 font-bold mb-1">10/18 回程</div>
+                            <div class="text-xs text-amber-700 font-bold mb-1">10/18 (日) 回程</div>
                             <div class="h-0.5 bg-amber-200 relative">
                                 <i class="fa-solid fa-plane absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-amber-500 rotate-180"></i>
                             </div>
@@ -791,13 +791,13 @@
             const exchangeRate = ref(0.977);
             const convertCurrency = () => { currencyTwd.value = Math.round(currencyThb.value * exchangeRate.value); };
 
-            // 日期與預設行程資料
+            // 2026 年 10 月正確對齊：10/09 為週五 (FRI) 起算至 10/18 週日 (SUN)
             const tripDays = [
-                { week: 'THU', date: '09' }, { week: 'FRI', date: '10' },
-                { week: 'SAT', date: '11' }, { week: 'SUN', date: '12' },
-                { week: 'MON', date: '13' }, { week: 'TUE', date: '14' },
-                { week: 'WED', date: '15' }, { week: 'THU', date: '16' },
-                { week: 'FRI', date: '17' }, { week: 'SAT', date: '18' }
+                { week: 'FRI', date: '09' }, { week: 'SAT', date: '10' },
+                { week: 'SUN', date: '11' }, { week: 'MON', date: '12' },
+                { week: 'TUE', date: '13' }, { week: 'WED', date: '14' },
+                { week: 'THU', date: '15' }, { week: 'FRI', date: '16' },
+                { week: 'SAT', date: '17' }, { week: 'SUN', date: '18' }
             ];
 
             const defaultItinerary = Array(10).fill().map(() => []); 
@@ -806,34 +806,35 @@
                 { id: 2, category: '美食', name: '喬德夜市 Jodd Fairs', time: '19:30', notes: '品嚐熱門曼谷夜市美食與九皇齋節 (เจ) 素食小吃攤', isVeggie: true }
             ];
             defaultItinerary[1] = [
-                { id: 3, category: '景點', name: '曼谷大皇宮 & 鄭王廟 (Wat Arun)', time: '09:00', notes: '換上泰服拍攝，體驗搭乘昭披耶河接駁船', isVeggie: false },
-                { id: 4, category: '美食', name: 'May Veggie Home 蔬食餐廳', time: '12:30', notes: '道地泰式蔬食綠咖哩與泰式炒河粉', isVeggie: true }
+                { id: 3, category: '購物', name: '恰圖恰週末市集 Chatuchak Market', time: '10:00', notes: '週六必逛！全球最大市集，採買特色香氛與服飾', isVeggie: false },
+                { id: 4, category: '美食', name: 'May Veggie Home 蔬食餐廳', time: '13:00', notes: '道地泰式蔬食綠咖哩與泰式炒河粉', isVeggie: true }
             ];
             defaultItinerary[2] = [
-                { id: 5, category: '購物', name: 'ICONSIAM 暹羅天地', time: '11:00', notes: '逛室內水上市場區，品嚐素食泰式甜點與芒果糯米飯', isVeggie: true },
-                { id: 6, category: '按摩', name: 'Let\'s Relax SPA 按摩', time: '16:00', notes: '放鬆泰式古法按摩 2 小時', isVeggie: false }
+                { id: 5, category: '景點', name: '曼谷大皇宮 & 鄭王廟 (Wat Arun)', time: '09:00', notes: '換上泰服拍攝，體驗搭乘昭披耶河接駁船', isVeggie: false },
+                { id: 6, category: '購物', name: 'ICONSIAM 暹羅天地', time: '14:00', notes: '逛室內水上市場區，品嚐素食泰式甜點與芒果糯米飯', isVeggie: true },
+                { id: 7, category: '按摩', name: 'Let\'s Relax SPA 按摩', time: '18:00', notes: '放鬆泰式古法按摩 2 小時', isVeggie: false }
             ];
             defaultItinerary[3] = [
-                { id: 7, category: '購物', name: '恰圖恰週末市集 Chatuchak Market', time: '10:00', notes: '曼谷最大市集爆買服飾與紀念品', isVeggie: false }
-            ];
-            defaultItinerary[4] = [
                 { id: 8, category: '景點', name: '大城古蹟一日遊 Ayutthaya', time: '08:30', notes: '包車參觀瑪哈泰寺樹抱佛頭與柴瓦塔那蘭寺', isVeggie: false }
             ];
-            defaultItinerary[5] = [
+            defaultItinerary[4] = [
                 { id: 9, category: '購物', name: 'CentralwOrld & 邊逛邊吃', time: '11:30', notes: '拜四面佛、逛 CentralwOrld 與 Big C 採買名產', isVeggie: false }
             ];
-            defaultItinerary[6] = [
+            defaultItinerary[5] = [
                 { id: 10, category: '美食', name: 'Broccoli Revolution 蔬食簡餐', time: '12:00', notes: 'Sukhumvit 巷弄內的時尚蔬食咖啡廳', isVeggie: true }
             ];
-            defaultItinerary[7] = [
+            defaultItinerary[6] = [
                 { id: 11, category: '美食', name: '唐人街耀華力路 Chinatown Night Tour', time: '18:00', notes: '感受九皇齋節最熱鬧的唐人街素食燈會與攤販', isVeggie: true }
             ];
+            defaultItinerary[7] = [
+                { id: 12, category: '按摩', name: 'Health Land SPA', time: '14:00', notes: '放鬆精油 Spa 舒緩連日逛街雙腿', isVeggie: false }
+            ];
             defaultItinerary[8] = [
-                { id: 12, category: '按摩', name: 'Health Land SPA', time: '14:00', notes: '回台前的放鬆精油 Spa', isVeggie: false }
+                { id: 13, category: '景點', name: 'Ari 文青區特色咖啡廳與選物店', time: '13:30', notes: '悠閒午後探索曼谷質感巷弄小店', isVeggie: false }
             ];
             defaultItinerary[9] = [
-                { id: 13, category: '購物', name: 'BKK 機場免稅店採買', time: '14:30', notes: '辦理退稅、免稅店購買禮盒', isVeggie: false },
-                { id: 14, category: '航班', name: '曼谷 BKK 飛回 台北 TPE (星宇 JX746)', time: '17:50', notes: '班機 17:50 起飛，預計 22:30 抵達桃園國際機場', isVeggie: false }
+                { id: 14, category: '購物', name: 'BKK 機場免稅店採買', time: '14:30', notes: '辦理退稅、免稅店購買伴手禮盒', isVeggie: false },
+                { id: 15, category: '航班', name: '曼谷 BKK 飛回 台北 TPE (星宇 JX746)', time: '17:50', notes: '班機 17:50 起飛，預計 22:30 抵達桃園國際機場', isVeggie: false }
             ];
 
             const itineraryData = reactive(defaultItinerary);
@@ -999,7 +1000,7 @@
                 if (expForm.name && expForm.amount) {
                     const expData = {
                         ...expForm,
-                        date: tripDays[selectedDateIndex.value].week + ' ' + tripDays[selectedDateIndex.value].date,
+                        date: tripDays[selectedDateIndex.value].week + ' 10/' + tripDays[selectedDateIndex.value].date,
                         amount: parseInt(expForm.amount)
                     };
                     if (isEditingExp.value && editingExpIndex.value !== null) {
